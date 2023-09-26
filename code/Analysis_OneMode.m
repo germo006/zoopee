@@ -81,13 +81,13 @@ iAnimal = iClio | iPx | iAmph | iEuph;
 
 t0ctrl_i = find(t0i);
 meanctrl0 = nanmean(mtabData_pM_Reorder(:,t0ctrl_i),2);
-stdectrl0 = nanstd(mtabData_pM_Reorder(:,t0ctrl_i),[],2)/sqrt(3);
+stdectrl0 = nanstd(mtabData_pM_Reorder(:,t0ctrl_i),[],2); %/sqrt(3);
 t6ctrl = mtabData_pM_Reorder(:,t6i & sInfoBig.Species=="CTRL");
 meanctrl6 = nanmean(t6ctrl,2);
-stdectrl6 = nanstd(t6ctrl,[],2)/sqrt(3);
+stdectrl6 = nanstd(t6ctrl,[],2); %/sqrt(3);
 t12ctrl = mtabData_pM_Reorder(:,t12i & sInfoBig.Species=="CTRL");
 meanctrl12 = nanmean(t12ctrl,2);
-stdectrl12 = nanstd(t12ctrl,[],2)/sqrt(3);
+stdectrl12 = nanstd(t12ctrl,[],2); %/sqrt(3);
 ctrls = [meanctrl0, meanctrl6, meanctrl12];
 ste_ctrls = [stdectrl0, stdectrl6, stdectrl12];
 
@@ -108,7 +108,7 @@ Pxtimer = rangetimes(2:end);
 Px_pM = [nanmean(mtabData_pM_Reorder(:,t6i&iPx),2),...
     nanmean(mtabData_pM_Reorder(:,t12i&iPx),2)];
 Px_stde_pM = [nanstd(mtabData_pM_Reorder(:,t6i&iPx),[],2),...
-    nanstd(mtabData_pM_Reorder(:,t12i&iPx),[],2)]./sqrt(3);
+    nanstd(mtabData_pM_Reorder(:,t12i&iPx),[],2)]; %./sqrt(3);
 
 Amph_pM = nanmean(mtabData_pM_Reorder(:,iAmph),2);
 Amph_stde_pM = nanstd(mtabData_pM_Reorder(:,iAmph),[],2);
@@ -123,7 +123,7 @@ Euph_stde_pM = nanstd(mtabData_pM_Reorder(:,iEuph),[],2);
 Px_pM_subctrl = [nanmean(mtabData_pM_Reorder_subctrl(:,t6i&iPx),2),...
     nanmean(mtabData_pM_Reorder_subctrl(:,t12i&iPx),2)];
 Px_stde_pM_subctrl = [nanstd(mtabData_pM_Reorder_subctrl(:,t6i&iPx),[],2),...
-    nanstd(mtabData_pM_Reorder_subctrl(:,t12i&iPx),[],2)]./sqrt(3);
+    nanstd(mtabData_pM_Reorder_subctrl(:,t12i&iPx),[],2)]; %./sqrt(3);
 
 Amph_pM_subctrl = nanmean(mtabData_pM_Reorder_subctrl(:,iAmph),2);
 Amph_stde_pM_subctrl = nanstd(mtabData_pM_Reorder_subctrl(:,iAmph),[],2);
@@ -138,7 +138,7 @@ Euph_stde_pM_subctrl = nanstd(mtabData_pM_Reorder_subctrl(:,iEuph),[],2);
 Px_pmol = [nanmean(mtabData_pmol(:,t6i&iPx),2),...
     nanmean(mtabData_pmol(:,t12i&iPx),2)];
 Px_stde_pmol = [nanstd(mtabData_pmol(:,t6i&iPx),[],2),...
-    nanstd(mtabData_pmol(:,t12i&iPx),[],2)]./sqrt(3);
+    nanstd(mtabData_pmol(:,t12i&iPx),[],2)]; %./sqrt(3);
 
 Amph_pmol = nanmean(mtabData_pmol(:,iAmph),2);
 Amph_stde_pmol = nanstd(mtabData_pmol(:,iAmph),[],2);
@@ -153,7 +153,7 @@ Euph_stde_pmol = nanstd(mtabData_pmol(:,iEuph),[],2);
 Px_pmol_mgdry_hr = [nanmean(mtabData_pmol_mgdry_hr(:,t6i&iPx),2),...
     nanmean(mtabData_pmol_mgdry_hr(:,t12i&iPx),2)];
 Px_stde_pmol_mgdry_hr = [nanstd(mtabData_pmol_mgdry_hr(:,t6i&iPx),[],2),...
-    nanstd(mtabData_pmol_mgdry_hr(:,t12i&iPx),[],2)]./sqrt(3);
+    nanstd(mtabData_pmol_mgdry_hr(:,t12i&iPx),[],2)]; %./sqrt(3);
 
 Amph_pmol_mgdry_hr = nanmean(mtabData_pmol_mgdry_hr(:,iAmph),2);
 Amph_stde_pmol_mgdry_hr = nanstd(mtabData_pmol_mgdry_hr(:,iAmph),[],2);
@@ -367,9 +367,9 @@ elem = mtabElem;
 %elem = elem(goodStuff,:);
 
 % Trim anything <0
-reducedRates = [reducedRatePx, reducedRateAmph, reducedRateClio, reducedRateEuph];
+reducedRates = [reducedRatePx(:,2), reducedRateAmph, reducedRateClio, reducedRateEuph];
 reducedRates(reducedRates<0) = 0;
-reducedErr = [reducedErrPx, reducedErrAmph, reducedErrClio, reducedRateEuph];
+reducedErr = [reducedErrPx(:,2), reducedErrAmph, reducedErrClio, reducedRateEuph];
 ibad = nansum(reducedRates,2) == 0 |...
     isnan(nansum(reducedRates,2));
 reducedRates(ibad,:) = [];
@@ -383,7 +383,7 @@ if 1
         [50 30 800 1000],'Units','inches');
     
     b1 = bar(categorical(reducedNames(max(reducedRates>1,[],2))),...
-        reducedRates(reducedRates>1), 'FaceColor','flat');
+        reducedRates(max(reducedRates>1,[],2),:), 'FaceColor','flat');
     % b1(1).XData = categorical(reducedNames(max(reducedRates>1,[],2)));
     % b1(2).XData = categorical(reducedNames(max(reducedRates>1,[],2)));
     % b1(3).XData = categorical(reducedNames(max(reducedRates>1,[],2)));
@@ -392,7 +392,8 @@ if 1
     b1(2).CData = repelem(stolas{4},length(reducedNames(max(reducedRates>1,[],2))),1);
     b1(3).CData = repelem(stolas{5},length(reducedNames(max(reducedRates>1,[],2))),1);
     b1(4).CData = repelem(stolas{3},length(reducedNames(max(reducedRates>1,[],2))),1);
-    set(gca, 'XTickLabel', reducedNames(max(reducedRates>1,[],2)), 'XTick', 1:length(reducedNames(max(reducedRates>1,[],2))),...
+    set(gca, 'XTickLabel', categorical(reducedNames(max(reducedRates>1,[],2))))
+    set(gca,... 'XTick', 1:length(reducedNames(max(reducedRates>1,[],2))),...
         'XTickLabelRotation', 90, 'YScale', 'log', 'TickLength', [0 0], ...
         'YGrid', 'on', 'YLim', [1, max(max(reducedRates(reducedRates>1)))+10]);
     ylabel('pmol mg^{-1} h^{-1}', 'Interpreter', 'tex')
@@ -401,11 +402,193 @@ if 1
         'northwest', 'FontSize', 8)
     saveas(f1, outdir + "/"+"EstimatedRates.pdf")
 end
+
+%% Sorting Rate Data: Eliminate Above-Curve and High-Error.
+
+i12h = (sInfoBig.Nominal_Duration_h==12);
+iDead = sInfoBig.Notes=="DEAD";
+
+% Flag 1 is 1 if the sample is above the standard curve. 
+Pxf1 = mtabData_pM_Reorder(:,i12h & iPx&~iDead)>MaxStd_pM;
+Cliof1 = mtabData_pM_Reorder(:,i12h & iClio&~iDead)>MaxStd_pM;
+Amphf1 = mtabData_pM_Reorder(:,i12h & iAmph&~iDead)>MaxStd_pM;
+Euphf1 = mtabData_pM_Reorder(:,i12h & iEuph&~iDead)>MaxStd_pM;
+
+maxoutTable = table(mtabNames, mean(Pxf1,2), mean(Cliof1,2),...
+    mean(Amphf1,2), mean(Euphf1,2),...
+    'VariableNames',{'Mtab','Px','Clio','Amph','Euph'});
+
+% Flag 2 is 1 if the sample is below the LOD.
+Pxf2 = mtabData_pM_Reorder(:,i12h & iPx&~iDead)<LOD_pM;
+Cliof2 = mtabData_pM_Reorder(:,i12h & iClio&~iDead)<LOD_pM;
+Amphf2 = mtabData_pM_Reorder(:,i12h & iAmph&~iDead)<LOD_pM;
+Euphf2 = mtabData_pM_Reorder(:,i12h & iEuph&~iDead)<LOD_pM;
+
+LODTable = table(mtabNames, mean(Pxf2,2), mean(Cliof2,2),...
+    mean(Amphf2,2), mean(Euphf2,2),...
+    'VariableNames',{'Mtab','Px','Clio','Amph','Euph'});
+
+% Flag 3 is 1 if the samples at t12 are not significantly different from
+% zero.
+Pxf3 = ttest(mtabData_pM_Reorder(:,i12h & iPx&~iDead)')'; Pxf3(isnan(Pxf3))=0;
+Pxf3 = ~Pxf3;
+Cliof3 = ones(size(mtabData_pM_Reorder(:,i12h & iClio&~iDead)));%ONLY ONE LIVE SAMPLE ttest(mtabData_pM_Reorder(:,i12h & iClio&~iDead)')'; 
+Cliof3(isnan(Cliof3))=0;
+Cliof3 = ~Cliof3;
+Amphf3 = ttest(mtabData_pM_Reorder(:,i12h & iAmph&~iDead)')'; Amphf3(isnan(Amphf3))=0;
+Amphf3 = ~Amphf3;
+Euphf3 = ttest(mtabData_pM_Reorder(:,i12h & iEuph&~iDead)')'; Euphf3(isnan(Euphf3))=0;
+Euphf3 = ~Euphf3;
+
+ttestTable = table(mtabNames, mean(Pxf3,2), mean(Cliof3,2),...
+    mean(Amphf3,2), mean(Euphf3,2),...
+    'VariableNames',{'Mtab','Px','Clio','Amph','Euph'});
+
+% Flag 4 is 1 if the samples at t12 are not significantly different from
+% the time-matched controls. 
+Pxf4 = ttest2(mtabData_pM_Reorder(:,i12h & iPx&~iDead)',t12ctrl')'; Pxf4(isnan(Pxf4))=0;
+Pxf4 = ~Pxf4;
+Cliof4 = ttest2(t12ctrl', mtabData_pM_Reorder(:,i12h & iClio&~iDead)')'; Cliof4(isnan(Cliof4))=0;
+Cliof4 = ~Cliof4;
+Amphf4 = ttest2(mtabData_pM_Reorder(:,i12h & iAmph&~iDead)',t12ctrl')'; Amphf4(isnan(Amphf4))=0;
+Amphf4 = ~Amphf4;
+Euphf4 = ttest2(mtabData_pM_Reorder(:,i12h & iEuph&~iDead)',t12ctrl')'; Euphf4(isnan(Euphf4))=0;
+Euphf4 = ~Euphf4;
+
+ttestctrlTable = table(mtabNames, mean(Pxf4,2), mean(Cliof4,2),...
+    mean(Amphf4,2), mean(Euphf4,2),...
+    'VariableNames',{'Mtab','Px','Clio','Amph','Euph'});
+
+%% What are the main disqualifiers? Do I need to dilute and rerun?
+
+AboveMax = table(mtabNames);
+
+AboveMax.FracPx = sum(Pxf1, 2)./2;
+AboveMax.FracClio = sum(Cliof1,2)./2;
+AboveMax.FracAmph = sum(Amphf1,2)./3;
+AboveMax.FracEuph = sum(Euphf1,2)./3;
+AboveMax.Avg = sum([Pxf1,Cliof1,Amphf1,Euphf1],2)./10;
+AboveMax.All = sum([Pxf1,Cliof1,Amphf1,Euphf1],2);
+
+writetable(AboveMax, "../datasets/AboveMax.csv")
+
+AboveMax_noProb = table(mtabNames);
+
+OnlyAbovePx = Pxf1 & ~(Pxf2 | Pxf3 | Pxf4);
+OnlyAboveClio = Cliof1 & ~(Cliof2 | Cliof3 | Cliof4);
+OnlyAboveEuph = Euphf1 & ~(Euphf2 | Euphf3 | Euphf4);
+OnlyAboveAmph = Amphf1 & ~(Amphf2 | Amphf3 | Amphf4);
+
+AboveMax_noProb.FracPx = sum(OnlyAbovePx, 2)./2;
+AboveMax_noProb.FracClio = sum(OnlyAboveClio, 2)./2;
+AboveMax_noProb.FracAmph = sum(OnlyAboveAmph, 2)./3;
+AboveMax_noProb.FracEuph = sum(OnlyAboveEuph, 2)./3;
+AboveMax_noProb.Avg = sum([OnlyAbovePx,OnlyAboveClio,OnlyAboveAmph,OnlyAboveEuph],2)./10;
+AboveMax_noProb.All = sum([OnlyAbovePx,OnlyAboveClio,OnlyAboveAmph,OnlyAboveEuph],2);
+
+writetable(AboveMax_noProb, "../datasets/AboveMax_noProb.csv")
+
+%% Creating hyper-reduced versions of the rate data using the flags. 
+
+iReject_Px = Pxf1 | Pxf2 | Pxf3 | Pxf4;
+iReject_Clio = Cliof1 | Cliof2 | Cliof3 | Cliof4;
+iReject_Amph = Amphf1 | Amphf2 | Amphf3 | Amphf4;
+iReject_Euph = Euphf1 | Euphf2 | Euphf3 | Euphf4;
+
+% The inventory
+Px_pmol0 = mtabData_pmol(:,t12i&iPx&~iDead); Px_pmol0(iReject_Px) = NaN;
+Px_pmol = mean(Px_pmol0,2,'omitmissing');
+Px_stde_pmol = std(Px_pmol0,[],2,'omitmissing');
+clear Px_pmol0
+
+Amph_pmol0 = mtabData_pmol(:,t12i&iAmph&~iDead); Amph_pmol0(iReject_Amph) = NaN;
+Amph_pmol = mean(Amph_pmol0,2,'omitmissing');
+Amph_stde_pmol = std(Amph_pmol0,[],2,'omitmissing');
+clear Amph_pmol0
+
+Clio_pmol0 = mtabData_pmol(:,t12i&iClio&~iDead); Clio_pmol0(iReject_Clio) = NaN;
+Clio_pmol = mean(Clio_pmol0,2,'omitmissing');
+Clio_stde_pmol = std(Clio_pmol0,[],2,'omitmissing');
+clear Clio_pmol0
+
+Euph_pmol0 = mtabData_pmol(:,t12i&iEuph&~iDead); Euph_pmol0(iReject_Euph) = NaN;
+Euph_pmol = mean(Euph_pmol0,2,'omitmissing');
+Euph_stde_pmol = std(Euph_pmol0,[],2,'omitmissing');
+clear Euph_pmol0
+
+% Now, the time-normalized inventory.
+Px_pmol_mgdry_hr0 = mtabData_pmol_mgdry_hr(:,t12i&iPx&~iDead); Px_pmol_mgdry_hr0(iReject_Px) = NaN;
+Px_pmol_mgdry_hr = mean(Px_pmol_mgdry_hr0,2,'omitmissing');
+Px_stde_pmol_mgdry_hr = std(Px_pmol_mgdry_hr0,[],2,'omitmissing');
+clear Px_pmol_mgdry_hr0
+
+Amph_pmol_mgdry_hr0 = mtabData_pmol_mgdry_hr(:,t12i&iAmph&~iDead); Amph_pmol_mgdry_hr0(iReject_Amph) = NaN;
+Amph_pmol_mgdry_hr = mean(Amph_pmol_mgdry_hr0,2,'omitmissing');
+Amph_stde_pmol_mgdry_hr = std(Amph_pmol_mgdry_hr0,[],2,'omitmissing');
+clear Amph_pmol_mgdry_hr0
+
+Clio_pmol_mgdry_hr0 = mtabData_pmol_mgdry_hr(:,t12i&iClio&~iDead); Clio_pmol_mgdry_hr0(iReject_Clio) = NaN;
+Clio_pmol_mgdry_hr = mean(Clio_pmol_mgdry_hr0,2,'omitmissing');
+Clio_stde_pmol_mgdry_hr = std(Clio_pmol_mgdry_hr0,[],2,'omitmissing');
+clear Clio_pmol_mgdry_hr0
+
+Euph_pmol_mgdry_hr0 = mtabData_pmol_mgdry_hr(:,t12i&iEuph&~iDead); Euph_pmol_mgdry_hr0(iReject_Euph) = NaN;
+Euph_pmol_mgdry_hr = mean(Euph_pmol_mgdry_hr0,2,'omitmissing');
+Euph_stde_pmol_mgdry_hr = std(Euph_pmol_mgdry_hr0,[],2,'omitmissing');
+clear Euph_pmol_mgdry_hr0
+
+
+%% Summary Figure Redux
+
+reducedRatePx = Px_pmol_mgdry_hr;
+reducedErrPx = Px_stde_pmol_mgdry_hr;
+reducedRateAmph = Amph_pmol_mgdry_hr;
+reducedRateEuph = Euph_pmol_mgdry_hr;
+reducedErrAmph = Amph_stde_pmol_mgdry_hr;
+reducedErrEuph = Euph_stde_pmol_mgdry_hr;
+reducedRateClio = Clio_pmol_mgdry_hr;
+reducedErrClio = Clio_stde_pmol_mgdry_hr;
+
+reducedNames = mtabNames;
+elem = mtabElem; 
+
+% Trim anything <0
+reducedRates = [reducedRatePx, reducedRateAmph, reducedRateClio, reducedRateEuph];
+reducedRates(reducedRates<0) = 0;
+reducedErr = [reducedErrPx, reducedErrAmph, reducedErrClio, reducedRateEuph];
+ibad = nansum(reducedRates,2) == 0 |...
+    isnan(nansum(reducedRates,2));
+reducedRates(ibad,:) = [];
+reducedNames(ibad,:) = [];
+reducedErr(ibad,:)= [];
+elem(ibad,:)=[];
+
+
+if 1
+    f1 = figure('Name',"AllEstimates_trimmed",'Color','none','Position',...
+        [50 30 800 1000],'Units','inches');
+    
+    b1 = bar(categorical(reducedNames(max(reducedRates>1,[],2))),...
+        reducedRates(max(reducedRates>1,[],2),:), 'FaceColor','flat');
+    b1(1).CData = stolas{2};
+    b1(2).CData = repelem(stolas{4},length(reducedNames(max(reducedRates>1,[],2))),1);
+    b1(3).CData = repelem(stolas{5},length(reducedNames(max(reducedRates>1,[],2))),1);
+    b1(4).CData = repelem(stolas{3},length(reducedNames(max(reducedRates>1,[],2))),1);
+    set(gca, 'XTickLabel', categorical(reducedNames(max(reducedRates>1,[],2))))
+    set(gca,... 'XTick', 1:length(reducedNames(max(reducedRates>1,[],2))),...
+        'XTickLabelRotation', 90, 'YScale', 'log', 'TickLength', [0 0], ...
+        'YGrid', 'on', 'YLim', [1, max(max(reducedRates(reducedRates>1)))+10]);
+    ylabel('pmol mg^{-1} h^{-1}', 'Interpreter', 'tex')
+    legend(gca, {'{\it P. xiphias}','{\it Amphipoda spp.}',...
+        '{\it C. cuspidata}', '{\it Euphasiid spp.}'}, 'Orientation', 'vertical','Location',...
+        'northwest', 'FontSize', 8)
+    saveas(f1, outdir + "/"+"EstimatedRates_trimmed.pdf")
+end
 %% Analysis of Rate Data. 
 
 rateEst = table();
 rateEst.mtabName = mtabNames;
-i12h = (sInfoBig.Nominal_Duration_h==12);
+
 rateEst.Px = nanmean(mtabData_pmol_mgdry_hr(:,i12h & iPx),2);
 rateEst.Clio = nanmean(mtabData_pmol_mgdry_hr(:,i12h & iClio),2);
 rateEst.Amph = nanmean(mtabData_pmol_mgdry_hr(:,i12h & iAmph),2);
@@ -414,7 +597,7 @@ rateEst.PxFlag = nanmean(mtabData_pM_Reorder(:,i12h & iPx),2)>MaxStd_pM;
 rateEst.ClioFlag = nanmean(mtabData_pM_Reorder(:,i12h & iClio),2)>MaxStd_pM;
 rateEst.AmphFlag = nanmean(mtabData_pM_Reorder(:,i12h & iAmph),2)>MaxStd_pM;
 rateEst.EuphFlag = nanmean(mtabData_pM_Reorder(:,i12h & iEuph),2)>MaxStd_pM;
-rateEst.ErrPx = Px_stde_pmol_mgdry_hr(:,2);
+rateEst.ErrPx = Px_stde_pmol_mgdry_hr;% (:,2);
 rateEst.ErrAmph = Amph_stde_pmol_mgdry_hr;
 rateEst.ErrClio = Clio_stde_pmol_mgdry_hr;
 rateEst.ErrEuph = Euph_stde_pmol_mgdry_hr;
@@ -452,4 +635,4 @@ rateEst(rateEst.General <=0 | isnan(rateEst.General),:)=[];
 elem(rateEst.General <=0 | isnan(rateEst.General),:)=[];
 
 
-writetable(rateEst, '../datasets/rateEstimates_24Aug.xlsx')
+writetable(rateEst, '../datasets/rateEstimates_22Sept.xlsx')

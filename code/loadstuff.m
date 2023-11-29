@@ -12,7 +12,7 @@ load("nicenames.mat")
 
 % setDefaultFigs
 % Load up the color palette of choice. 
-load("AlbumMaps.mat", "stolas")
+load("AlbumMaps.mat", "CP1")
 
 % Notes from lab notebook:
 %   Lost 0.5 mL (~1/12) of extract #29 - should not affect L/H ratio

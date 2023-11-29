@@ -12,7 +12,7 @@ if ~exist(outdir, 'dir')
 end
 
 % Information for constructing a color gradient later on. 
-colors = [stolas{1};stolas{4};stolas{5};stolas{2}];
+colors = [CP1{1};CP1{4};CP1{5};CP1{2}];
 npts = 1000;
 
 %% Calculations.
@@ -268,13 +268,13 @@ t = text(X(AboveMax), Y(AboveMax),"*");
 %         dead = sI.Notes=="DEAD";
 % 
 % 
-%         sc1 = scatter(sI.x(px),sI.y(px),36,stolas{1},"filled");
+%         sc1 = scatter(sI.x(px),sI.y(px),36,CP1{1},"filled");
 %         hold on
-%         sc2 = scatter(sI.x(am),sI.y(am),36,stolas{2},"filled");
-%         sc3 = scatter(sI.x(eu&~dead),sI.y(eu&~dead),36,stolas{3},"filled");
-%         sc4 = scatter(sI.x(cp&~dead),sI.y(cp&~dead),36,stolas{4},"filled");
-%         sc6 = scatter(sI.x(cp&dead),sI.y(cp&dead),36,stolas{4}, "HandleVisibility","off");
-%         sc5 = scatter(sI.x(eu&dead),sI.y(eu&dead),36, stolas{3}, "HandleVisibility","off");
+%         sc2 = scatter(sI.x(am),sI.y(am),36,CP1{2},"filled");
+%         sc3 = scatter(sI.x(eu&~dead),sI.y(eu&~dead),36,CP1{3},"filled");
+%         sc4 = scatter(sI.x(cp&~dead),sI.y(cp&~dead),36,CP1{4},"filled");
+%         sc6 = scatter(sI.x(cp&dead),sI.y(cp&dead),36,CP1{4}, "HandleVisibility","off");
+%         sc5 = scatter(sI.x(eu&dead),sI.y(eu&dead),36, CP1{3}, "HandleVisibility","off");
 %         q = quiver(z,z,100*vecs(:,1),100*vecs(:,2),"HandleVisibility","off");
 %         t = text(100*vecs(:,1),100*vecs(:,2),vecnames,"HandleVisibility","off");
 %         t2 = text(sI.x(cp&dead)+1,sI.y(cp&dead),"dead", "HandleVisibility","off");
@@ -342,14 +342,14 @@ t = text(X(AboveMax), Y(AboveMax),"*");
 %         z = zeros(size(vecs,1),1);
 % 
 % 
-%         sc1 = scatter(sI.x(px),sI.y(px),36,stolas{1},"filled");
+%         sc1 = scatter(sI.x(px),sI.y(px),36,CP1{1},"filled");
 %         hold on
-%         sc2 = scatter(sI.x(am),sI.y(am),36,stolas{2},"filled");
-%         sc3 = scatter(sI.x(eu&~dead),sI.y(eu&~dead),36,stolas{3},"filled");
-%         sc4 = scatter(sI.x(cp&~dead),sI.y(cp&~dead),36,stolas{4},"filled");
-%         sc6 = scatter(sI.x(cp&dead),sI.y(cp&dead),36,stolas{4}, "HandleVisibility","off");
-%         sc5 = scatter(sI.x(eu&dead),sI.y(eu&dead),36, stolas{3}, "HandleVisibility","off");
-%         sc7 = scatter(sI.x(t12ctrl_i), sI.y(t12ctrl_i), 36, stolas{5}, 'filled');
+%         sc2 = scatter(sI.x(am),sI.y(am),36,CP1{2},"filled");
+%         sc3 = scatter(sI.x(eu&~dead),sI.y(eu&~dead),36,CP1{3},"filled");
+%         sc4 = scatter(sI.x(cp&~dead),sI.y(cp&~dead),36,CP1{4},"filled");
+%         sc6 = scatter(sI.x(cp&dead),sI.y(cp&dead),36,CP1{4}, "HandleVisibility","off");
+%         sc5 = scatter(sI.x(eu&dead),sI.y(eu&dead),36, CP1{3}, "HandleVisibility","off");
+%         sc7 = scatter(sI.x(t12ctrl_i), sI.y(t12ctrl_i), 36, CP1{5}, 'filled');
 %         q = quiver(z,z,vecs(:,1),vecs(:,2),"HandleVisibility","off");
 %         t = text(vecs(:,1),vecs(:,2),vecnames,"HandleVisibility","off");
 %         t2 = text(sI.x(cp&dead)+0.1,sI.y(cp&dead),"dead", "HandleVisibility","off");
@@ -418,14 +418,14 @@ t = text(X(AboveMax), Y(AboveMax),"*");
         % %vecs = vecs(r2>0.7,:);
         % z = zeros(size(vecs,1),1);
         % 
-        % sc1 = scatter(sI.x(px),sI.y(px),100,stolas{1},"filled"); %(~iallctrl & px)
+        % sc1 = scatter(sI.x(px),sI.y(px),100,CP1{1},"filled"); %(~iallctrl & px)
         % hold on
-        % sc2 = scatter(sI.x(am),sI.y(am),100,stolas{2},"filled");
-        % sc3 = scatter(sI.x(eu&~dead),sI.y(eu&~dead),100,stolas{3},"filled");
-        % sc4 = scatter(sI.x(cp&~dead),sI.y(cp&~dead),100,stolas{4},"filled");
-        % sc6 = scatter(sI.x(cp&dead),sI.y(cp&dead),100,stolas{4}, "HandleVisibility","off");
-        % sc5 = scatter(sI.x(eu&dead),sI.y(eu&dead),100, stolas{3}, "HandleVisibility","off");
-        % sc7 = scatter(sI.x(t12ctrl_i), sI.y(t12ctrl_i), 100, stolas{5}, 'filled');
+        % sc2 = scatter(sI.x(am),sI.y(am),100,CP1{2},"filled");
+        % sc3 = scatter(sI.x(eu&~dead),sI.y(eu&~dead),100,CP1{3},"filled");
+        % sc4 = scatter(sI.x(cp&~dead),sI.y(cp&~dead),100,CP1{4},"filled");
+        % sc6 = scatter(sI.x(cp&dead),sI.y(cp&dead),100,CP1{4}, "HandleVisibility","off");
+        % sc5 = scatter(sI.x(eu&dead),sI.y(eu&dead),100, CP1{3}, "HandleVisibility","off");
+        % sc7 = scatter(sI.x(t12ctrl_i), sI.y(t12ctrl_i), 100, CP1{5}, 'filled');
         % q = quiver(z,z,vecs(:,1),vecs(:,2),"HandleVisibility","off", "LineWidth",2,"Color", "k", "AutoScale", "off");
         % t = text(1.1.*vecs(InterestIndex,1),1.1.*vecs(InterestIndex,2),vecnames(InterestIndex),"HandleVisibility","off");
         % %t2 = text(sI.x(cp&dead)+0.1,sI.y(cp&dead),"dead", "HandleVisibility","off");
@@ -480,7 +480,7 @@ boxplotmtabs = (mtabData_pM_Reorder(~mremove,:)' .* (sI.Volume_mL_./1000))';
 
 figure 
 b = boxplot(boxplotmtabs,sI.Species, "PlotStyle", "compact",...
-    "Colors", [stolas{3}; stolas{1}; stolas{2}; stolas{5}; stolas{4}]);
+    "Colors", [CP1{3}; CP1{1}; CP1{2}; CP1{5}; CP1{4}]);
 ax = gca; ax.YScale = "log";
 ax.XTick = [1,2,3,4,5];
 ax.XTickLabel = {"C. pyrimidata", "Control","P. xiphias", "Euphausiid", "Amphipod"};
@@ -514,11 +514,11 @@ bmmEu = reshape(scattertabs(:,rI.Species == "Euph"),length(xEu),1);
 figure
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
 hold on
-sc1 = scatter(xCt,bmmCt, 40, stolas{1},"o");
-sc2 = scatter(xPx,bmmPx, 40, stolas{2},'filled',"^");
-sc3 = scatter(xCp,bmmCp, 40, stolas{3},'filled',"square");
-sc4 = scatter(xAm,bmmAm, 40, stolas{4},'filled',"diamond");
-sc5 = scatter(xEu,bmmEu, 40, stolas{5},'filled',"hexagram");
+sc1 = scatter(xCt,bmmCt, 40, CP1{1},"o");
+sc2 = scatter(xPx,bmmPx, 40, CP1{2},'filled',"^");
+sc3 = scatter(xCp,bmmCp, 40, CP1{3},'filled',"square");
+sc4 = scatter(xAm,bmmAm, 40, CP1{4},'filled',"diamond");
+sc5 = scatter(xEu,bmmEu, 40, CP1{5},'filled',"hexagram");
 ax = gca;
 ax.YLabel.String = "metabolite present at 12 h, pmol";
 set(ax,"XLim",[0 1.5+length(scatternames)], "YScale","log");
@@ -531,11 +531,11 @@ title("Control-Screened Metabolites, Volume-Normalized, Ordered by Median")
 figure
 yline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5])
 hold on
-sc1 = scatter(bmmCt,xCt, 40, stolas{1},"o");
-sc2 = scatter(bmmPx,xPx, 40, stolas{2},'filled',"^");
-sc3 = scatter(bmmCp,xCp, 40, stolas{3},'filled',"square");
-sc4 = scatter(bmmAm,xAm, 40, stolas{4},'filled',"diamond");
-sc5 = scatter(bmmEu,xEu, 40, stolas{5},'filled',"hexagram");
+sc1 = scatter(bmmCt,xCt, 40, CP1{1},"o");
+sc2 = scatter(bmmPx,xPx, 40, CP1{2},'filled',"^");
+sc3 = scatter(bmmCp,xCp, 40, CP1{3},'filled',"square");
+sc4 = scatter(bmmAm,xAm, 40, CP1{4},'filled',"diamond");
+sc5 = scatter(bmmEu,xEu, 40, CP1{5},'filled',"hexagram");
 ax = gca;
 ax.XLabel.String = "metabolite present at 12 h, pmol";
 set(ax,"YLim",[0 1.5+length(scatternames)], "XScale","log");
@@ -574,11 +574,11 @@ bmmEu = reshape(scattertabs(:,rI.Species == "Euph"),length(xEu),1);
 figure
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
 hold on
-%sc1 = scatter(xCt,bmmCt, 40, stolas{1},"o");
-sc2 = scatter(xPx,bmmPx, 40, stolas{2},'filled',"^");
-sc3 = scatter(xCp,bmmCp, 40, stolas{3},'filled',"square");
-sc4 = scatter(xAm,bmmAm, 40, stolas{4},'filled',"diamond");
-sc5 = scatter(xEu,bmmEu, 40, stolas{5},'filled',"hexagram");
+%sc1 = scatter(xCt,bmmCt, 40, CP1{1},"o");
+sc2 = scatter(xPx,bmmPx, 40, CP1{2},'filled',"^");
+sc3 = scatter(xCp,bmmCp, 40, CP1{3},'filled',"square");
+sc4 = scatter(xAm,bmmAm, 40, CP1{4},'filled',"diamond");
+sc5 = scatter(xEu,bmmEu, 40, CP1{5},'filled',"hexagram");
 ax = gca;
 ax.YLabel.String = "metabolite present at 12 h, pmol";
 set(ax,"XLim",[0 1.5+length(scatternames)], "YScale","log");
@@ -622,12 +622,12 @@ bmmEu = reshape(scattertabs(:,rI.Species == "Euph"),length(xEu),1);
 figure
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
 hold on
-sc2 = scatter(xPx,bmmPx, 40, stolas{2},'filled',"^");
-sc3 = scatter(xCp(~deadCp),bmmCp(~deadCp), 40, stolas{3},'filled',"square");
-sc4 = scatter(xAm,bmmAm, 40, stolas{4},'filled',"diamond");
-sc5 = scatter(xEu(~deadEu),bmmEu(~deadEu), 40, stolas{5},'filled',"hexagram");
-sc6 = scatter(xCp(deadCp),bmmCp(deadCp), 40, stolas{3},"square");
-sc7 = scatter(xEu(deadEu),bmmEu(deadEu), 40, stolas{5},"hexagram");
+sc2 = scatter(xPx,bmmPx, 40, CP1{2},'filled',"^");
+sc3 = scatter(xCp(~deadCp),bmmCp(~deadCp), 40, CP1{3},'filled',"square");
+sc4 = scatter(xAm,bmmAm, 40, CP1{4},'filled',"diamond");
+sc5 = scatter(xEu(~deadEu),bmmEu(~deadEu), 40, CP1{5},'filled',"hexagram");
+sc6 = scatter(xCp(deadCp),bmmCp(deadCp), 40, CP1{3},"square");
+sc7 = scatter(xEu(deadEu),bmmEu(deadEu), 40, CP1{5},"hexagram");
 ax = gca;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
 set(ax,"XLim",[0 1.5+length(scatternames)], "YScale","log");
@@ -675,12 +675,12 @@ bmmEu = reshape(scattertabs(:,rI.Species == "Euph"),length(xEu),1);
 figure
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
 hold on
-sc2 = scatter(xPx,bmmPx, 40, stolas{2},'filled',"^");
-sc3 = scatter(xCp(~deadCp),bmmCp(~deadCp), 40, stolas{3},'filled',"square");
-sc4 = scatter(xAm,bmmAm, 40, stolas{4},'filled',"diamond");
-sc5 = scatter(xEu(~deadEu),bmmEu(~deadEu), 40, stolas{5},'filled',"hexagram");
-sc6 = scatter(xCp(deadCp),bmmCp(deadCp), 40, stolas{3},"square");
-sc7 = scatter(xEu(deadEu),bmmEu(deadEu), 40, stolas{5},"hexagram");
+sc2 = scatter(xPx,bmmPx, 40, CP1{2},'filled',"^");
+sc3 = scatter(xCp(~deadCp),bmmCp(~deadCp), 40, CP1{3},'filled',"square");
+sc4 = scatter(xAm,bmmAm, 40, CP1{4},'filled',"diamond");
+sc5 = scatter(xEu(~deadEu),bmmEu(~deadEu), 40, CP1{5},'filled',"hexagram");
+sc6 = scatter(xCp(deadCp),bmmCp(deadCp), 40, CP1{3},"square");
+sc7 = scatter(xEu(deadEu),bmmEu(deadEu), 40, CP1{5},"hexagram");
 ax = gca;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
 set(ax,"XLim",[0 1.5+length(scatternames)], "YScale","log");
@@ -713,7 +713,7 @@ pxnames = nicenames(~mremove);
 pxnames = pxnames(ia(~below));
 xPx = repmat(1:sum(~below),1,length(rI.Species(rI.Species=="PX")))';
 bmmPx = reshape(pxtabs,length(xPx),1);
-sc1 = scatter(xPx,bmmPx, 40, stolas{2},'filled',"^");
+sc1 = scatter(xPx,bmmPx, 40, CP1{2},'filled',"^");
 ax = gca;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
 set(ax,"XLim",[0 1+length(pxnames)], "YScale","log");
@@ -737,9 +737,9 @@ cpnames = nicenames(~mremove);
 cpnames = cpnames(ia(~below));
 xCp = repelem(1:sum(~below),1,length(rI.Species(rI.Species=="C. pyrimidata")))';
 bmmCp = reshape(cptabs,length(xCp),1);
-sc2 = scatter(xCp(~idead),bmmCp(~idead), 40, stolas{3},'filled',"square");
+sc2 = scatter(xCp(~idead),bmmCp(~idead), 40, CP1{3},'filled',"square");
 hold on
-sc3 = scatter(xCp(idead),bmmCp(idead), 40, stolas{3},"square");
+sc3 = scatter(xCp(idead),bmmCp(idead), 40, CP1{3},"square");
 ax = gca;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
 set(ax,"XLim",[0 1+length(cpnames)], "YScale","log");
@@ -764,9 +764,9 @@ eunames = nicenames(~mremove);
 eunames = eunames(ia(~below));
 xEu = repelem(1:sum(~below),1,length(rI.Species(rI.Species=="Euph")))';
 bmmEu = reshape(eutabs,length(xEu),1);
-sc2 = scatter(xEu(~idead),bmmEu(~idead), 40, stolas{5},'filled',"hexagram");
+sc2 = scatter(xEu(~idead),bmmEu(~idead), 40, CP1{5},'filled',"hexagram");
 hold on
-sc3 = scatter(xEu(idead),bmmEu(idead), 40, stolas{5},"hexagram");
+sc3 = scatter(xEu(idead),bmmEu(idead), 40, CP1{5},"hexagram");
 ax = gca;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
 set(ax,"XLim",[0 1+length(eunames)], "YScale","log");
@@ -788,7 +788,7 @@ amnames = nicenames(~mremove);
 amnames = amnames(ia(~below));
 xAm = repelem(1:sum(~below),1,length(rI.Species(rI.Species=="Amphipod (long skinny)")))';
 bmmAm = reshape(amtabs,length(xAm),1);
-sc2 = scatter(xAm,bmmAm, 40, stolas{4},'filled',"diamond");
+sc2 = scatter(xAm,bmmAm, 40, CP1{4},'filled',"diamond");
 hold on
 ax = gca;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
@@ -844,10 +844,10 @@ xEu = 1.4:1:(1.4+sum(~mremove)-1);
 figure
 xline(xL(1:end-sum(aboveLim)), "LineStyle","-", "LineWidth",0.5, "Color",[.2,.2,.2],"HandleVisibility","off")
 hold on
-sc2 = scatter(xPx(1:end-sum(aboveLim)),vPT(~aboveLim), 40, stolas{2},'filled',"^");
-sc4 = scatter(xAm(1:end-sum(aboveLim)),vAT(~aboveLim), 40, stolas{4},'filled',"diamond");
-sc6 = scatter(xCp(1:end-sum(aboveLim)),vCT(~aboveLim), 40, stolas{3},"filled","square");
-sc7 = scatter(xEu(1:end-sum(aboveLim)),vET(~aboveLim), 40, stolas{5},"filled","hexagram");
+sc2 = scatter(xPx(1:end-sum(aboveLim)),vPT(~aboveLim), 40, CP1{2},'filled',"^");
+sc4 = scatter(xAm(1:end-sum(aboveLim)),vAT(~aboveLim), 40, CP1{4},'filled',"diamond");
+sc6 = scatter(xCp(1:end-sum(aboveLim)),vCT(~aboveLim), 40, CP1{3},"filled","square");
+sc7 = scatter(xEu(1:end-sum(aboveLim)),vET(~aboveLim), 40, CP1{5},"filled","hexagram");
 ax = gca;
 ax.YLabel.String = "\sigma_{species} \sigma_{all}^{-1}";
 set(ax,"XLim",[0 1.5+length(scatternames(~aboveLim))], "YLim", [0 hLim]);
@@ -895,8 +895,8 @@ DecoyBarN = NT - MeanN;
 
 subplot(1,2,1)
 b = bar([MeanC',DecoyBar'], "stacked");
-b(1).FaceColor = stolas{1};
-b(2).FaceColor = stolas{2};
+b(1).FaceColor = CP1{1};
+b(2).FaceColor = CP1{2};
 ax = gca;
 order = ["Control","Px", "Cp", "Am", "Eu"];
 xticklabels(order(2:5))
@@ -908,8 +908,8 @@ text(b(1).XEndPoints, b(1).YEndPoints, percents, 'HorizontalAlignment','center',
 
 subplot(1,2,2)
 bn = bar([MeanN',DecoyBarN'], "stacked");
-bn(1).FaceColor = stolas{1};
-bn(2).FaceColor = stolas{2};
+bn(1).FaceColor = CP1{1};
+bn(2).FaceColor = CP1{2};
 ax = gca;
 xticklabels(order(2:5))
 ylabel("TDN Relative to Control, \muM")
@@ -940,7 +940,7 @@ h = heatmap(nicenames, LabelsOrdered+ string(1:22)', HeatMapMtabs');
 h.ColorLimits = [1,10];
 h.ColorScaling = "log";
 
-colors = [stolas{1};stolas{4};stolas{5};stolas{2}];
+colors = [CP1{1};CP1{4};CP1{5};CP1{2}];
 npts = 1000;
 h.Colormap = flip(cmapper(colors,npts));
 
@@ -968,19 +968,19 @@ if 1
         
         eb1 = errorbar(ax1, meantimes, ctrls(i,:),...
             ste_ctrls(i,:),ste_ctrls(i,:),...
-            'Color',stolas{1},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{1},'LineWidth',1.5, 'LineStyle', 'none');
         eb2 = errorbar(ax1, Pxtimes, Px_pM(i,:),...
             Px_stde_pM(i,:),Px_stde_pM(i,:),...
-            'Color',stolas{3},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{3},'LineWidth',1.5, 'LineStyle', 'none');
         eb3 = errorbar(ax1, meantimes(3), Amph_pM(i,:),...
             Amph_stde_pM(i,:),Amph_stde_pM(i,:),...
-            'Color',stolas{4},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{4},'LineWidth',1.5, 'LineStyle', 'none');
         eb4 = errorbar(ax1, meantimes(3), Clio_pM(i,:),...
             Clio_stde_pM(i,:),Clio_stde_pM(i,:),...
-            'Color',stolas{5},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{5},'LineWidth',1.5, 'LineStyle', 'none');
         eb5 = errorbar(ax1, meantimes(3), Euph_pM(i,:),...
             Euph_stde_pM(i,:),Euph_stde_pM(i,:),...
-            'Color',stolas{2},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{2},'LineWidth',1.5, 'LineStyle', 'none');
         ylim([0,max([1,Px_pM(i,:),Amph_pM(i,:),Clio_pM(i,:),Euph_pM(i,:)])])
       
         
@@ -993,58 +993,58 @@ if 1
         % The control subtraction.
         eb6 = errorbar(ax2, meantimes, ctrls(i,:)-meanctrl0(i),...
             ste_ctrls(i,:),ste_ctrls(i,:),...
-            'Color',stolas{1},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{1},'LineWidth',1.5, 'LineStyle', 'none');
         hold(ax2)
         eb7 = errorbar(ax2, Pxtimes, Px_pM_subctrl(i,:),...
             Px_stde_pM(i,:),Px_stde_pM(i,:),...
-            'Color',stolas{3},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{3},'LineWidth',1.5, 'LineStyle', 'none');
         eb8 = errorbar(ax2, meantimes(3), Amph_pM_subctrl(i,:),...
             Amph_stde_pM(i,:),Amph_stde_pM(i,:),...
-            'Color',stolas{4},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{4},'LineWidth',1.5, 'LineStyle', 'none');
         eb9 = errorbar(ax2, meantimes(3), Clio_pM_subctrl(i,:),...
             Clio_stde_pM(i,:),Clio_stde_pM(i,:),...
-            'Color',stolas{5},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{5},'LineWidth',1.5, 'LineStyle', 'none');
         eb10 = errorbar(ax2, meantimes(3), Euph_pM_subctrl(i,:),...
             Euph_stde_pM(i,:),Euph_stde_pM(i,:),...
-            'Color',stolas{2},'LineWidth',1.5, 'LineStyle', 'none'); 
+            'Color',CP1{2},'LineWidth',1.5, 'LineStyle', 'none'); 
         ylim([0,max([1,Px_pM_subctrl(i,:),Amph_pM_subctrl(i,:),Clio_pM_subctrl(i,:),Euph_pM_subctrl(i,:)])])
 
         % The inventory.
         eb11 = errorbar(ax3, meantimes, (ctrls(i,:)-meanctrl0(i)).*0.06,...
             ste_ctrls(i,:).*0.06,ste_ctrls(i,:).*0.06,...
-            'Color',stolas{1},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{1},'LineWidth',1.5, 'LineStyle', 'none');
         hold(ax3)
         eb12 = errorbar(ax3, Pxtimes, Px_pmol(i,:),...
             Px_stde_pmol(i,:),Px_stde_pmol(i,:),...
-            'Color',stolas{3},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{3},'LineWidth',1.5, 'LineStyle', 'none');
         eb13 = errorbar(ax3, meantimes(3), Amph_pmol(i,:),...
             Amph_stde_pmol(i,:),Amph_stde_pmol(i,:),...
-            'Color',stolas{4},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{4},'LineWidth',1.5, 'LineStyle', 'none');
         eb14 = errorbar(ax3, meantimes(3), Clio_pmol(i,:),...
             Clio_stde_pmol(i,:),Clio_stde_pmol(i,:),...
-            'Color',stolas{5},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{5},'LineWidth',1.5, 'LineStyle', 'none');
         eb15 = errorbar(ax3, meantimes(3), Euph_pmol(i,:),...
             Euph_stde_pmol(i,:),Euph_stde_pmol(i,:),...
-            'Color',stolas{2},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{2},'LineWidth',1.5, 'LineStyle', 'none');
         ylim([0,max([1,Px_pmol(i,:),Amph_pmol(i,:),Clio_pmol(i,:),Euph_pmol(i,:)])])
         
         % The mass-normalized inventory.
         eb16 = errorbar(ax4, meantimes, ctrls(i,:),...
             ste_ctrls(i,:),ste_ctrls(i,:),...
-            'Color',stolas{1},'LineWidth',1.5, 'LineStyle', 'none', 'Visible', 'off');
+            'Color',CP1{1},'LineWidth',1.5, 'LineStyle', 'none', 'Visible', 'off');
         hold(ax4)
         eb17 = errorbar(ax4, Pxtimes, Px_pmol_mgdry_hr(i,:),...
             Px_stde_pmol_mgdry_hr(i,:),Px_stde_pmol_mgdry_hr(i,:),...
-            'Color',stolas{3},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{3},'LineWidth',1.5, 'LineStyle', 'none');
         eb18 = errorbar(ax4, meantimes(3), Amph_pmol_mgdry_hr(i,:),...
             Amph_stde_pmol_mgdry_hr(i,:),Amph_stde_pmol_mgdry_hr(i,:),...
-            'Color',stolas{4},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{4},'LineWidth',1.5, 'LineStyle', 'none');
         eb19 = errorbar(ax4, meantimes(3), Clio_pmol_mgdry_hr(i,:),...
             Clio_stde_pmol_mgdry_hr(i,:),Clio_stde_pmol_mgdry_hr(i,:),...
-            'Color',stolas{5},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{5},'LineWidth',1.5, 'LineStyle', 'none');
         eb20 = errorbar(ax4, meantimes(3), Euph_pmol_mgdry_hr(i,:),...
             Euph_stde_pmol_mgdry_hr(i,:),Euph_stde_pmol_mgdry_hr(i,:),...
-            'Color',stolas{2},'LineWidth',1.5, 'LineStyle', 'none');
+            'Color',CP1{2},'LineWidth',1.5, 'LineStyle', 'none');
         ylim([0,max([1,Px_pmol_mgdry_hr(i,:),Amph_pmol_mgdry_hr(i,:),Clio_pmol_mgdry_hr(i,:),Euph_pmol_mgdry_hr(i,:)])])
         
         ax1.XLabel.String = 'time, h';
@@ -1110,10 +1110,10 @@ if 1
     % b1(2).XData = categorical(reducedNames(max(reducedRates>1,[],2)));
     % b1(3).XData = categorical(reducedNames(max(reducedRates>1,[],2)));
     % b1(4).XData = categorical(reducedNames(max(reducedRates>1,[],2)));
-    b1(1).CData = stolas{2};
-    b1(2).CData = repelem(stolas{4},length(reducedNames(max(reducedRates>1,[],2))),1);
-    b1(3).CData = repelem(stolas{5},length(reducedNames(max(reducedRates>1,[],2))),1);
-    b1(4).CData = repelem(stolas{3},length(reducedNames(max(reducedRates>1,[],2))),1);
+    b1(1).CData = CP1{2};
+    b1(2).CData = repelem(CP1{4},length(reducedNames(max(reducedRates>1,[],2))),1);
+    b1(3).CData = repelem(CP1{5},length(reducedNames(max(reducedRates>1,[],2))),1);
+    b1(4).CData = repelem(CP1{3},length(reducedNames(max(reducedRates>1,[],2))),1);
     set(gca, 'XTickLabel', categorical(reducedNames(max(reducedRates>1,[],2))))
     set(gca,... 'XTick', 1:length(reducedNames(max(reducedRates>1,[],2))),...
         'XTickLabelRotation', 90, 'YScale', 'log', 'TickLength', [0 0], ...
@@ -1292,10 +1292,10 @@ if 1
     
     b1 = bar(categorical(reducedNames(max(reducedRates>1,[],2))),...
         reducedRates(max(reducedRates>1,[],2),:), 'FaceColor','flat');
-    b1(1).CData = stolas{2};
-    b1(2).CData = repelem(stolas{4},length(reducedNames(max(reducedRates>1,[],2))),1);
-    b1(3).CData = repelem(stolas{5},length(reducedNames(max(reducedRates>1,[],2))),1);
-    b1(4).CData = repelem(stolas{3},length(reducedNames(max(reducedRates>1,[],2))),1);
+    b1(1).CData = CP1{2};
+    b1(2).CData = repelem(CP1{4},length(reducedNames(max(reducedRates>1,[],2))),1);
+    b1(3).CData = repelem(CP1{5},length(reducedNames(max(reducedRates>1,[],2))),1);
+    b1(4).CData = repelem(CP1{3},length(reducedNames(max(reducedRates>1,[],2))),1);
     set(gca, 'XTickLabel', categorical(reducedNames(max(reducedRates>1,[],2))))
     set(gca,... 'XTick', 1:length(reducedNames(max(reducedRates>1,[],2))),...
         'XTickLabelRotation', 90, 'YScale', 'log', 'TickLength', [0 0], ...

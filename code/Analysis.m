@@ -222,7 +222,7 @@ if 0
 end
 
 
-%% Scatterplot; by species and only the t12 samples
+%% Scatterplot; by species
 
 scattertabs = mtabData_pmol_mgdry_hr(~mremove,t12i|t6i)';
 scattertabs(isnan(scattertabs))= 0;
@@ -232,7 +232,6 @@ rI = rI(~ictrl,:);
 scattertabs = scattertabs(~ictrl,:);
 scattertabs(scattertabs<0)=0;
 % ia12 = rI.Nominal_Duration_h==12&(rI.Species=="PX"|rI.Species=="C. pyrimidata"|rI.Species=="Euph"|rI.Species=="Amphipod (long skinny)");
-scattertabs = scattertabs./rI.dryWeight./hours(rI.duration);
 % clear ia12
 kfun = @(m) 10./(6*m);
 hline = @(y, x) plot(x, [y,y], "--k", "HandleVisibility","off");
@@ -272,16 +271,16 @@ subplot(2,2,2)
 cptabs = scattertabs(rI.Species == "C. pyrimidata",:);
 meanmass = mean(rI.dryWeight(rI.Species == "C. pyrimidata"));
 kthresh = kfun(meanmass);
-below = sum(cptabs>kthresh,1)==0;
+%below = sum(cptabs>kthresh,1)==0;
 med = median(cptabs,1,"omitnan");
 [~,ia] = sort(med);
 tempI = rI(rI.Species=="C. pyrimidata",:);
 idead = tempI.Notes=="DEAD";
-idead = repmat(idead',1,sum(~below))';
-cptabs = cptabs(:,ia(~below));
+idead = repmat(idead',1,size(cptabs,2))';
+cptabs = cptabs(:,ia);
 cpnames = nicenames(~mremove); 
-cpnames = cpnames(ia(~below));
-xCp = repelem(1:sum(~below),1,length(rI.Species(rI.Species=="C. pyrimidata")))';
+cpnames = cpnames(ia);
+xCp = repelem(1:size(cpnames,1),1,length(rI.Species(rI.Species=="C. pyrimidata")))';
 bmmCp = reshape(cptabs,length(xCp),1);
 sc2 = scatter(xCp(~idead),bmmCp(~idead), 40, CP1{3},'filled',"square");
 hold on
@@ -291,7 +290,7 @@ ax.YLabel.String = "pmol h^{-1} mg^{-1}";
 set(ax,"XLim",[0 1+length(cpnames)], "YScale","log");
 set(ax,"XTick",1:length(cpnames), "XTickLabels", cpnames,"XTickLabelRotation",45)
 hold on
-xL = 1.5:1:(1.5+sum(~below)-2);
+xL = 1.5:1:(1.5+size(cpnames,1)-2);
 h = hline(kthresh, ax.XLim);
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
 clear tempI idead
@@ -303,16 +302,16 @@ subplot(2,2,3)
 eutabs = scattertabs(rI.Species == "Euph",:);
 meanmass = mean(rI.dryWeight(rI.Species == "Euph"));
 kthresh = kfun(meanmass);
-below = sum(eutabs>kthresh,1)==0;
+%below = sum(eutabs>kthresh,1)==0;
 med = median(eutabs,1,"omitnan");
 [~,ia] = sort(med);
 tempI = rI(rI.Species=="Euph",:);
 idead = tempI.Notes=="DEAD";
-idead = repmat(idead',1,sum(~below))';
-eutabs = eutabs(:,ia(~below));
+idead = repmat(idead',1,size(eutabs,2))';
+eutabs = eutabs(:,ia);
 eunames = nicenames(~mremove); 
-eunames = eunames(ia(~below));
-xEu = repelem(1:sum(~below),1,length(rI.Species(rI.Species=="Euph")))';
+eunames = eunames(ia);
+xEu = repelem(1:size(eunames,1),1,length(rI.Species(rI.Species=="Euph")))';
 bmmEu = reshape(eutabs,length(xEu),1);
 sc2 = scatter(xEu(~idead),bmmEu(~idead), 40, CP1{1},'filled',"hexagram");
 hold on
@@ -324,7 +323,7 @@ set(ax,"XLim",[0 1+length(eunames)], "YScale","log");
 set(ax,"XTick",1:length(eunames), "XTickLabels", eunames,"XTickLabelRotation",45)
 h = hline(kthresh, ax.XLim);
 hold on
-xL = 1.5:1:(1.5+sum(~below)-2);
+xL = 1.5:1:(1.5+size(eunames,1)-2);
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
 clear tempI idead
 title("Euphausiids")
@@ -335,13 +334,13 @@ subplot(2,2,4)
 amtabs = scattertabs(rI.Species == "Amphipod (long skinny)",:);
 meanmass = mean(rI.dryWeight(rI.Species == "Amphipod (long skinny)"));
 kthresh = kfun(meanmass);
-below = sum(amtabs>2.1667,1)==0;
+%below = sum(amtabs>2.1667,1)==0;
 med = median(amtabs,1,"omitnan");
 [~,ia] = sort(med);
-amtabs = amtabs(:,ia(~below));
+amtabs = amtabs(:,ia);
 amnames = nicenames(~mremove); 
-amnames = amnames(ia(~below));
-xAm = repelem(1:sum(~below),1,length(rI.Species(rI.Species=="Amphipod (long skinny)")))';
+amnames = amnames(ia);
+xAm = repelem(1:size(amnames,1),1,length(rI.Species(rI.Species=="Amphipod (long skinny)")))';
 bmmAm = reshape(amtabs,length(xAm),1);
 sc2 = scatter(xAm,bmmAm, 40, CP1{4},'filled',"diamond");
 hold on
@@ -351,10 +350,93 @@ set(ax,"XLim",[0 1+length(amnames)], "YScale","log");
 set(ax,"XTick",1:length(amnames), "XTickLabels", amnames,"XTickLabelRotation",45)
 hold on
 h = hline(kthresh, ax.XLim);
-xL = 1.5:1:(1.5+sum(~below)-2);
+xL = 1.5:1:(1.5+size(amnames,1)-2);
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
 clear tempI idead
-title("Scina spp.", "FontAngle","italic")
+title("\it{Scina} spp.")
+
+%% Scatterplot; all at once.
+
+scattertabs = mtabData_pmol_mgdry_hr(~mremove,t12i|t6i)';
+med = median(scattertabs,1,"omitnan");
+[~,ia] = sort(med);
+names = nicenames(~mremove);
+names = names(ia);
+scatter_sort = scattertabs(:,ia);
+
+% P. xiphias plot.
+pxtabs6 = scatter_sort(rI.Species == "PX"&rI.Nominal_Duration_h==6,:);
+pxtabs12 = scatter_sort(rI.Species == "PX"&rI.Nominal_Duration_h==12,:);
+meanmass = mean(rI.dryWeight(rI.Species == "PX"));
+kthresh1 = kfun(meanmass);
+xPx6 = repmat(1:size(names,1),1,sum(rI.Species=="PX"&rI.Nominal_Duration_h==6))'; %1:sum(~below)
+xPx12 = repmat(1:size(names,1),1,sum(rI.Species=="PX"&rI.Nominal_Duration_h==12))'; %1:sum(~below)
+bmmPx6 = reshape(pxtabs6,length(xPx6),1);
+bmmPx12 = reshape(pxtabs12,length(xPx12),1);
+sc1 = scatter(xPx6,bmmPx6, 40, CP1{2},"v");
+hold on
+sc2 = scatter(xPx12,bmmPx12, 40, CP1{2},'filled',"^");
+xL = 1.5:1:(1.5+size(names,1)-2);
+xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
+
+
+% C. py plot.
+cptabs = scatter_sort(rI.Species == "C. pyrimidata",:);
+meanmass = mean(rI.dryWeight(rI.Species == "C. pyrimidata"));
+kthresh2 = kfun(meanmass);
+tempI = rI(rI.Species=="C. pyrimidata",:);
+idead = tempI.Notes=="DEAD";
+idead = repmat(idead',1,size(cptabs,2))'; 
+xCp = repelem(1:size(names,1),1,length(rI.Species(rI.Species=="C. pyrimidata")))';
+bmmCp = reshape(cptabs,length(xCp),1);
+sc3 = scatter(xCp(~idead),bmmCp(~idead), 40, CP1{3},'filled',"square");
+sc4 = scatter(xCp(idead),bmmCp(idead), 40, CP1{3},"square");
+clear tempI idead
+
+
+% Euph plot.
+eutabs = scatter_sort(rI.Species == "Euph",:);
+meanmass = mean(rI.dryWeight(rI.Species == "Euph"));
+kthresh3 = kfun(meanmass);
+tempI = rI(rI.Species=="Euph",:);
+idead = tempI.Notes=="DEAD";
+idead = repmat(idead',1,size(eutabs,2))';
+xEu = repelem(1:size(names,1),1,length(rI.Species(rI.Species=="Euph")))';
+bmmEu = reshape(eutabs,length(xEu),1);
+sc5 = scatter(xEu(~idead),bmmEu(~idead), 40, CP1{1},'filled',"hexagram");
+sc6 = scatter(xEu(idead),bmmEu(idead), 40, CP1{1},"hexagram");
+clear tempI idead
+
+% Amph plot
+amtabs = scatter_sort(rI.Species == "Amphipod (long skinny)",:);
+meanmass = mean(rI.dryWeight(rI.Species == "Amphipod (long skinny)"));
+kthresh4 = kfun(meanmass);
+xAm = repelem(1:size(names,1),1,length(rI.Species(rI.Species=="Amphipod (long skinny)")))';
+bmmAm = reshape(amtabs,length(xAm),1);
+sc7 = scatter(xAm,bmmAm, 40, CP1{4},'filled',"diamond");
+ax = gca;
+h1 = hline(kthresh1, ax.XLim);
+h1.Color = CP1{2}; h1.LineWidth = 2;
+h2 = hline(kthresh2, ax.XLim);
+h2.Color = CP1{3}; h2.LineWidth = 2;
+h3 = hline(kthresh3, ax.XLim);
+h3.Color = CP1{1}; h3.LineWidth = 2;
+h4 = hline(kthresh4, ax.XLim);
+h4.Color = CP1{4}; h4.LineWidth = 2;
+ax.YLabel.String = "pmol h^{-1} mg^{-1}";
+set(ax,"XLim",[0 1+length(names)], "YScale","log");
+set(ax,"XTick",1:length(names), "XTickLabels", names,"XTickLabelRotation",45)
+title("All Species' Excretion Rates", "FontWeight","bold")
+legend(["\it{P. xiphias}_{6h}", "\it{P. xiphias}_{12h}",...
+    "\it{C. pyrimidata} (live)","\it{C. pyrimidata} (dead)",...
+    "\it{Hansarsia microps}","{\itStylocheiron abbreviatum} (dead)",...
+    "\it{Scina} spp."], "Location","northwest")
+
+if 0
+    highnames = nicenames([6:6,12:12,21:24,28:28,31:31,41:41,43:43,46:46,51:53,55:56,59:60,62:65,68:69,75:75,78:78,81:81],1);
+    [ihigh] = ismember(names,highnames);
+    text(ax.XTick(ihigh)-0.1,0.005*ones(1,sum(ihigh)), "*", "Color","r", "FontSize", 20,"HandleVisibility","off")
+end
 
 %% An accounting of elements contained in the metabolites.
 
@@ -375,52 +457,83 @@ elmC = elmC(:,~ictrldead)-meanctrlsc;
 elmN = elmN(:,~ictrldead)-meanctrlsn;
 elmC(elmC<0)=0;elmN(elmN<0)=0;
 itaurine = (mtabNames=="taurine"); iglycine = (mtabNames=="glycine");
+ihsb = (mtabNames=="homoserine betaine"); iput = (mtabNames=="putrescine");
+iarg = (mtabNames=="arginine"); iser = (mtabNames=="serine");
+iala = (mtabNames=="alanine");
 Ctau = elmC(itaurine,:); Ntau = elmN(itaurine,:);
 Cgly = elmC(iglycine,:); Ngly = elmN(iglycine,:);
+Chsb = elmC(ihsb,:); Nhsb = elmN(ihsb,:);
+Cput = elmC(iput,:); Nput = elmN(iput,:);
+Carg = elmC(iarg,:); Narg = elmN(iarg,:);
+Cser = elmC(iser,:); Nser = elmN(iser,:);
+Cala = elmC(iala,:); Nala = elmN(iala,:);
 
 elmC = sum(elmC,1);elmN = sum(elmN,1);
 [G, ID] = findgroups(rI.Species);
-MeanC = splitapply(@mean,elmC,G'); MeanC = MeanC([4,2,1,3]);
+
+MeanChsb = splitapply(@mean,Chsb,G'); MeanChsb = MeanChsb([4,2,1,3])./1e6;
+MeanNhsb = splitapply(@mean,Nhsb,G'); MeanNhsb = MeanNhsb([4,2,1,3])./1e6;
+
+MeanCput = splitapply(@mean,Cput,G'); MeanCput = MeanCput([4,2,1,3])./1e6;
+MeanNput = splitapply(@mean,Nput,G'); MeanNput = MeanNput([4,2,1,3])./1e6;
+
+MeanCarg = splitapply(@mean,Carg,G'); MeanCarg = MeanCarg([4,2,1,3])./1e6;
+MeanNarg = splitapply(@mean,Narg,G'); MeanNarg = MeanNarg([4,2,1,3])./1e6;
+
+MeanCser = splitapply(@mean,Cser,G'); MeanCser = MeanCser([4,2,1,3])./1e6;
+MeanNser = splitapply(@mean,Nser,G'); MeanNser = MeanNser([4,2,1,3])./1e6;
+
+MeanCala = splitapply(@mean,Cala,G'); MeanCala = MeanCala([4,2,1,3])./1e6;
+MeanNala = splitapply(@mean,Nala,G'); MeanNala = MeanNala([4,2,1,3])./1e6;
+
 MeanCt = splitapply(@mean,Ctau,G'); MeanCt = MeanCt([4,2,1,3])./1e6;
 MeanNt = splitapply(@mean,Ntau,G'); MeanNt = MeanNt([4,2,1,3])./1e6;
+
 MeanCg = splitapply(@mean,Cgly,G'); MeanCg = MeanCg([4,2,1,3])./1e6;
 MeanNg = splitapply(@mean,Ngly,G'); MeanNg = MeanNg([4,2,1,3])./1e6;
-MeanN = splitapply(@mean,elmN,G'); MeanN = MeanN([4,2,1,3]);
-MeanC = MeanC./1e6;MeanN = MeanN./1e6;
 
+MeanC = splitapply(@mean,elmC,G'); MeanC = MeanC([4,2,1,3])./1e6;
+MeanN = splitapply(@mean,elmN,G'); MeanN = MeanN([4,2,1,3])./1e6;
+
+mtabC = [MeanChsb;MeanCput;MeanCarg;MeanCser;MeanCala;MeanCt;MeanCg];
+mtabN = [MeanNhsb;MeanNput;MeanNarg;MeanNser;MeanNala;MeanNt;MeanNg];
 CT = DCN{1,2:end} - DCN{1,1};
 NT = DCN{2,2:end} - DCN{2,1};
-DecoyBar = CT - MeanC;
-DecoyBarN = NT - MeanN;
+DecoyBar = CT - MeanC - sum(mtabC,1);
+MeanCnomtab = MeanC - sum(mtabC,1);
+DecoyBarN = NT - MeanN - sum(mtabN,1);
+MeanNnomtab = MeanN - sum(mtabN,1);
 
 subplot(1,2,1)
-b = bar([MeanC',DecoyBar'], "stacked");
-b(1).FaceColor = CP1{1};
-b(2).FaceColor = CP1{2};
+b = bar([mtabC',MeanCnomtab',DecoyBar'], "stacked");
+b(8).FaceColor = [0.2 0.2 0.2];
+b(9).FaceColor = [0.7 0.7 0.7];
 ax = gca;
-order = ["Control","Px", "Cp", "Am", "Eu"];
+order = ["Control","P. xiphias", "C. pyrimidata", "Scina spp.", "H. microps"];
 xticklabels(order(2:5))
 ylabel("DOC Relative to Control, \muM")
 set(ax, "Box", "off")
 percents = string(round(100.*MeanC./CT,1))+ "%";
-text(b(1).XEndPoints, b(1).YEndPoints, percents, 'HorizontalAlignment','center',...
+text(b(8).XEndPoints, b(8).YEndPoints, percents, 'HorizontalAlignment','center',...
     'VerticalAlignment','bottom')
 
 subplot(1,2,2)
-bn = bar([MeanN',DecoyBarN'], "stacked");
-bn(1).FaceColor = CP1{1};
-bn(2).FaceColor = CP1{2};
+bn = bar([mtabN', MeanNnomtab',DecoyBarN'], "stacked");
+bn(8).FaceColor = [0.2 0.2 0.2];
+bn(9).FaceColor = [0.7 0.7 0.7];
 ax = gca;
 xticklabels(order(2:5))
 ylabel("TDN Relative to Control, \muM")
 set(ax, "Box", "off")
-legend({"Metabolites","Other"})
+legend(["homoserine betaine","putrescine","arginine","serine",...
+    "alanine","taurine","glycine",...
+    "other metabolites","unaccounted"], "Location","northwest")
 percentsN = string(round(100.*MeanN./NT,1))+ "%";
-text(bn(1).XEndPoints, bn(1).YEndPoints, percentsN, 'HorizontalAlignment','center',...
+text(bn(8).XEndPoints, bn(8).YEndPoints, percentsN, 'HorizontalAlignment','center',...
     'VerticalAlignment','bottom')
 
-
-
+percentCArg = 100.*MeanCarg./CT;
+percentNArg = 100.*MeanNarg./NT;
 
 
 

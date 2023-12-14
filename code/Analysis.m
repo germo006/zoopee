@@ -30,10 +30,6 @@ npts = 1000;
 %       weight of the bugs. 
 %
 
-% First: let's actually break the metabolites into elements. 
-totC = mtabData_pM_Reorder.*mtabElem.C;
-totN = mtabData_pM_Reorder.*mtabElem.N;
-
 % Determine the actual incubation durations. 
 sI.duration = sI.TimeStop - sI.TimeStart;
 
@@ -41,6 +37,7 @@ sI.duration = sI.TimeStop - sI.TimeStart;
 t0ctrl_i = find(sI.Nominal_Duration_h == 0);
 t6ctrl_i = find(sI.Nominal_Duration_h == 6 & sI.Species == "CTRL");
 t12ctrl_i = find(sI.Nominal_Duration_h == 12 & sI.Species == "CTRL");
+iallctrl = sI.Species=="CTRL"; 
 
 % Useful indices for time points and animals.
 t0i = sI.Nominal_Duration_h == 0;
@@ -158,16 +155,18 @@ Clio_stde_pmol_mgdry_hr = nanstd(mtabData_pmol_mgdry_hr(:,iClio),[],2);
 Euph_pmol_mgdry_hr = nanmean(mtabData_pmol_mgdry_hr(:,iEuph),2);
 Euph_stde_pmol_mgdry_hr = nanstd(mtabData_pmol_mgdry_hr(:,iEuph),[],2);
 
-% Creating a screening process for metabolites that are too high in the
+%% Please ignore
+%lizplot_top10
+
+%%  Creating a screening process for metabolites that are too high in the
 % control or else just bad ones that slipped past the automated QC
 
-iallctrl = sI.Species=="CTRL"; 
 mtab_pM_ctrl = mtabData_pM_Reorder(:,iallctrl);
 mtab_pM_notctrl = mtabData_pM_Reorder(:,~iallctrl);
 mremove = (10.*mean(mtab_pM_ctrl,2,"omitnan")>mean(mtab_pM_notctrl,2,"omitnan"));
 rmNames = ["2'deoxyguanosine Na","S-(5'-adenosyl)-L-homocysteine",...
-     "adenosine", "serine 2", "4-aminobenzoic acid","cysteine dimer",...
-     "ornithine 2"]';
+     "adenosine", "serine 2", "cysteine dimer",...
+     "ornithine 2"]'; %"4-aminobenzoic acid",
 [~, ibad] = ismember(rmNames, mtabNames); mremove(ibad) = 1;
 
 clear rmNames mtab_pM_notctrl mtab_pM_ctrl
@@ -221,7 +220,105 @@ if 0
     t = text(X(AboveMax), Y(AboveMax),"*");
 end
 
+%% Heatmap plot: reduced to ten.
+% Originally, this section contained a lot about ordinating and clustering
+% the data based on Bray-Curtis dissimilarity. This was not a particularly
+% useful metric, and while that analysis still exists in Analysis_OneMode,
+% I will not reproduce it here, instead favoring an approach that simply
+% groups the species based on taxonomy. 
 
+% I created the variable TaxOrder which will order the species by
+% high-order (phylum to order) taxonomy: CTRL, pteropod, copepod, amphipod,
+% euphausiids
+
+% This new version only uses the top ten overall excreted mtabs. 
+[~,LabelOrder] = sort(sI.TaxOrder(~iallctrl));
+LabelsOrdered = sI.AccurateSpecies(~iallctrl);
+LabelsOrdered = LabelsOrdered(LabelOrder);
+HeatMapMtabs = mtabData_pmol_mgdry_hr(~mremove, ~iallctrl);
+HeatMapMtabs = round(HeatMapMtabs(:,LabelOrder));
+HeatMapMtabs(HeatMapMtabs<=0) = NaN;
+ihrm = (sum(isnan(HeatMapMtabs),2)==size(HeatMapMtabs,2));
+LiveDead = sI.Notes(~iallctrl); LiveDead = string(LiveDead(LabelOrder));
+TimePointInfo = sI.Nominal_Duration_h(~iallctrl); 
+TimePointInfo = string(TimePointInfo(LabelOrder));
+hxdata = nicenames(~mremove);
+hydata = LabelsOrdered+ " " + TimePointInfo +" h " + LiveDead+ " " +...
+    string(1:size(LiveDead,1))';
+hxdata(ihrm,:)=[];
+HeatMapMtabs(ihrm,:)=[];
+
+HeatMapMeds = HeatMapMtabs;
+HeatMapMeds(isnan(HeatMapMeds)) = 0;
+medians = median(HeatMapMeds,2); 
+[~,iam] = sort(medians, "descend");
+HeatMapMtabs = HeatMapMtabs(iam(1:10),:);
+hxdata = hxdata(iam(1:10));
+tooHigh = mtabData_pM_Reorder>MaxStd_pM; 
+tooHigh_map = tooHigh(~mremove, ~iallctrl);
+tooHigh_map = tooHigh_map(:,LabelOrder);
+tooHigh_map(ihrm,:) = [];
+tooHigh_map = tooHigh_map(iam(1:10),:);
+
+% Make the heatmap.
+h = heatmap(hydata, hxdata, HeatMapMtabs);
+% h.ColorLimits = [1,10];
+h.ColorScaling = "scaledcolumns";
+h.Colormap = flip(cmapper(colors,npts));
+h.FontSize = 12;
+h.ColorbarVisible = "off";
+axp = struct(gca);       %you will get a warning
+axp.Axes.XAxisLocation = 'top';
+
+% Add the "Above the standard curve" markers
+if 0
+    MaxRM = MaxStd_pM(~mremove);
+    AboveMax = mtabData_pM_Reorder(~mremove,~iallctrl);
+    AboveMax = AboveMax(:,LabelOrder)>MaxRM;
+    AboveMax = flip(AboveMax',1);
+    ax = axes(gcf, "Position", h.Position, "Units","normalized","Color", "none");
+    ax.Box = "off";
+    set(ax, "XTick", [], "YTick", [])
+    ax.XLim = [0 size(AboveMax,2)]; ax.YLim = [0 size(AboveMax,1)];
+    [X,Y] = meshgrid(0:size(AboveMax,2),0:size(AboveMax,1));
+    t = text(X(AboveMax), Y(AboveMax),"*");
+end
+
+
+%% Bray-Curtis Dissimilarity and ANOSIM
+% I am going to conduct this analysis using the codes from the Fathom
+% toolbox: f_braycurtis, f_anosim, and f_anosim2
+% also requires dependencies, so really you should download the fathom
+% toolbox and include it as below.
+addpath("C:/Users/germo/Documents/MATLAB/Fathom/")
+
+% First-things first is constructing two dissimilarity matrices:
+% One that includes all samples on a mole inventory basis...
+mn = mtabData_pM_Reorder; mn(isnan(mn))=0; % set NaNs to zero
+diss_inv = f_braycurtis(mn); % Generate a distance matrix
+
+% ...and one based on the normalized rates, which eliminates the controls
+% through the earlier subtraction step.
+mn = mtabData_pmol_mgdry_hr(:,~iallctrl); mn(isnan(mn))=0; % set NaNs to zero
+diss_rate = f_braycurtis(mn); % Generate a distance matrix
+
+clear mn
+
+% Next, we do two different ANOSIMs:
+% The first, using the diss_inv to see if the controls are significantly
+% different from the samples...
+grps = iallctrl+1;
+disp(grpn_inv)
+ANOSIM_inv = f_anosim(diss_inv,grps,1,1000,1,1);
+
+clear grps
+% ...and the second, to drill down into the rates themselves without the
+% controls. 
+[grps, grpn_rate] = findgroups(sI.AccurateSpecies(~iallctrl));
+disp(grpn_rate)
+ANOSIM_rate = f_anosim(diss_rate,grps,1,1000,1,1);
+
+clear grps
 %% Scatterplot; by species
 
 scattertabs = mtabData_pmol_mgdry_hr(~mremove,t12i|t6i)';
@@ -442,6 +539,10 @@ end
 
 load("DOC_DON.mat")
 
+% First: let's actually break the metabolites into elements. 
+totC = mtabData_pM_Reorder(~mremove,:).*mtabElem.C(~mremove,:);
+totN = mtabData_pM_Reorder(~mremove,:).*mtabElem.N(~mremove,:);
+
 elmC = totC(:,sI.Nominal_Duration_h==12);
 elmN = totN(:,sI.Nominal_Duration_h==12);
 elmC(isnan(elmC))= 0; elmN(isnan(elmN))= 0;
@@ -456,10 +557,10 @@ meanctrlsn = mean(elmN(:,ictrl),2,"omitnan");
 elmC = elmC(:,~ictrldead)-meanctrlsc;
 elmN = elmN(:,~ictrldead)-meanctrlsn;
 elmC(elmC<0)=0;elmN(elmN<0)=0;
-itaurine = (mtabNames=="taurine"); iglycine = (mtabNames=="glycine");
-ihsb = (mtabNames=="homoserine betaine"); iput = (mtabNames=="putrescine");
-iarg = (mtabNames=="arginine"); iser = (mtabNames=="serine");
-iala = (mtabNames=="alanine");
+itaurine = (mtabNames(~mremove)=="taurine"); iglycine = (mtabNames(~mremove)=="glycine");
+ihsb = (mtabNames(~mremove)=="homoserine betaine"); iput = (mtabNames(~mremove)=="putrescine");
+iarg = (mtabNames(~mremove)=="arginine"); iser = (mtabNames(~mremove)=="serine");
+iala = (mtabNames(~mremove)=="alanine"); inbz = (mtabNames(~mremove)=="4-aminobenzoic acid");
 Ctau = elmC(itaurine,:); Ntau = elmN(itaurine,:);
 Cgly = elmC(iglycine,:); Ngly = elmN(iglycine,:);
 Chsb = elmC(ihsb,:); Nhsb = elmN(ihsb,:);
@@ -467,6 +568,7 @@ Cput = elmC(iput,:); Nput = elmN(iput,:);
 Carg = elmC(iarg,:); Narg = elmN(iarg,:);
 Cser = elmC(iser,:); Nser = elmN(iser,:);
 Cala = elmC(iala,:); Nala = elmN(iala,:);
+Cnbz = elmC(inbz,:); Nnbz = elmN(inbz,:);
 
 elmC = sum(elmC,1);elmN = sum(elmN,1);
 [G, ID] = findgroups(rI.Species);
@@ -492,45 +594,72 @@ MeanNt = splitapply(@mean,Ntau,G'); MeanNt = MeanNt([4,2,1,3])./1e6;
 MeanCg = splitapply(@mean,Cgly,G'); MeanCg = MeanCg([4,2,1,3])./1e6;
 MeanNg = splitapply(@mean,Ngly,G'); MeanNg = MeanNg([4,2,1,3])./1e6;
 
+MeanCnbz = splitapply(@mean,Cnbz,G'); MeanCnbz = MeanCnbz([4,2,1,3])./1e6;
+MeanNnbz = splitapply(@mean,Nnbz,G'); MeanNnbz = MeanNnbz([4,2,1,3])./1e6;
+
 MeanC = splitapply(@mean,elmC,G'); MeanC = MeanC([4,2,1,3])./1e6;
 MeanN = splitapply(@mean,elmN,G'); MeanN = MeanN([4,2,1,3])./1e6;
 
-mtabC = [MeanChsb;MeanCput;MeanCarg;MeanCser;MeanCala;MeanCt;MeanCg];
-mtabN = [MeanNhsb;MeanNput;MeanNarg;MeanNser;MeanNala;MeanNt;MeanNg];
-CT = DCN{1,2:end} - DCN{1,1};
-NT = DCN{2,2:end} - DCN{2,1};
+
+mtabC = [MeanChsb;MeanCput;MeanCarg;MeanCser;MeanCala;MeanCt;MeanCg;MeanCnbz];
+mtabN = [MeanNhsb;MeanNput;MeanNarg;MeanNser;MeanNala;MeanNt;MeanNg;MeanNnbz];
+%CT = DCN{1,2:end} - DCN{1,1};
+%NT = DCN{2,2:end} - DCN{2,1};
+CT = DCN_ctrlsub12{1,:};
+NT = DCN_ctrlsub12{2,:};
 DecoyBar = CT - MeanC - sum(mtabC,1);
 MeanCnomtab = MeanC - sum(mtabC,1);
 DecoyBarN = NT - MeanN - sum(mtabN,1);
 MeanNnomtab = MeanN - sum(mtabN,1);
 
+load("AlbumMaps.mat","CP2")
+ComboColors = flip([CP1;CP2]);
+
 subplot(1,2,1)
-b = bar([mtabC',MeanCnomtab',DecoyBar'], "stacked");
-b(8).FaceColor = [0.2 0.2 0.2];
-b(9).FaceColor = [0.7 0.7 0.7];
+b = barh([mtabC',MeanCnomtab',DecoyBar'], "stacked");
+b(9).FaceColor = [0.2 0.2 0.2];
+b(10).FaceColor = "w";
 ax = gca;
-order = ["Control","P. xiphias", "C. pyrimidata", "Scina spp.", "H. microps"];
-xticklabels(order(2:5))
-ylabel("DOC Relative to Control, \muM")
-set(ax, "Box", "off")
+order = ["Control","\it{P. xiph.    }", "\it{C. pyr.     }", "\it{Scina} spp. ", "\it{H. microps }"];
+ax.YTick = [];
+xlabel("DOC Relative to Control, \muM")
+set(ax, "Box", "off", "XColor", "none", "YColor","none")
+ax.XDir = "reverse";
+ax.XAxis.TickLabelColor = "k";
+ax.XAxis.Label.Color = "k";
+ax.XGrid = "on";
 percents = string(round(100.*MeanC./CT,1))+ "%";
-text(b(8).XEndPoints, b(8).YEndPoints, percents, 'HorizontalAlignment','center',...
+text(b(9).YEndPoints+2, b(9).XEndPoints-0.05, percents, 'HorizontalAlignment','center',...
     'VerticalAlignment','bottom')
+for ii = 1:length(b)-2
+    b(ii).FaceColor = ComboColors{ii};
+end
 
 subplot(1,2,2)
-bn = bar([mtabN', MeanNnomtab',DecoyBarN'], "stacked");
-bn(8).FaceColor = [0.2 0.2 0.2];
-bn(9).FaceColor = [0.7 0.7 0.7];
+bn = barh([mtabN', MeanNnomtab',DecoyBarN'], "stacked");
+bn(9).FaceColor = [0.2 0.2 0.2];
+bn(10).FaceColor = "w";
 ax = gca;
-xticklabels(order(2:5))
-ylabel("TDN Relative to Control, \muM")
-set(ax, "Box", "off")
+yticklabels(order(2:5))
+xlabel("TDN Relative to Control, \muM")
+set(ax, "Box", "off","XColor", "none", "YColor","none")
+ax.TickLength = [0,0];
+ax.TickLabelInterpreter = "tex";
+ax.XAxis.TickLabelColor = "k";
+ax.YAxis.TickLabelColor = "k";
+ax.XAxis.Label.Color = "k";
+ax.XGrid = "on";
 legend(["homoserine betaine","putrescine","arginine","serine",...
-    "alanine","taurine","glycine",...
-    "other metabolites","unaccounted"], "Location","northwest")
+    "alanine","taurine","glycine","4-aminobenzoic acid*",...
+    "other metabolites","unaccounted"], "Location","southeast")
 percentsN = string(round(100.*MeanN./NT,1))+ "%";
-text(bn(8).XEndPoints, bn(8).YEndPoints, percentsN, 'HorizontalAlignment','center',...
+text(bn(9).YEndPoints+2, bn(9).XEndPoints-0.05, percentsN, 'HorizontalAlignment','center',...
     'VerticalAlignment','bottom')
+for ii = 1:length(bn)-2
+    bn(ii).FaceColor = ComboColors{ii};
+end
+
+
 
 percentCArg = 100.*MeanCarg./CT;
 percentNArg = 100.*MeanNarg./NT;

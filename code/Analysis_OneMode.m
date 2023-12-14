@@ -162,9 +162,10 @@ Euph_stde_pmol_mgdry_hr = nanstd(mtabData_pmol_mgdry_hr(:,iEuph),[],2);
 iallctrl = sI.Species=="CTRL"; 
 mtab_pM_ctrl = mtabData_pM_Reorder(:,iallctrl);
 mtab_pM_notctrl = mtabData_pM_Reorder(:,~iallctrl);
-mremove = (10.*mean(mtab_pM_ctrl,2,"omitmissing")>mean(mtab_pM_notctrl,2,"omitmissing"));
+mremove = (10.*mean(mtab_pM_ctrl,2,"omitnan")>mean(mtab_pM_notctrl,2,"omitnan"));
 rmNames = ["2'deoxyguanosine Na","S-(5'-adenosyl)-L-homocysteine",...
-     "adenosine", "serine 2", "4-aminobenzoic acid","cysteine dimer"]';
+     "adenosine", "serine 2", "4-aminobenzoic acid","cysteine dimer",...
+     "ornithine 2"]';
 [~, ibad] = ismember(rmNames, mtabNames); mremove(ibad) = 1;
 
 clear rmNames mtab_pM_notctrl mtab_pM_ctrl iallctrl
@@ -175,7 +176,7 @@ clear rmNames mtab_pM_notctrl mtab_pM_ctrl iallctrl
 % the construction of a tree with bootstrapping. 
 
 num_boots = 10000;
-mD = mtabData_pM_Reorder; % Set which normalization to use
+mD = mtabData_pmol_mgdry_hr(~mremove,:); % Set which normalization to use
 % construncting trees based on 
 % AnalysisType = "Euclidean";
 % AnalysisType = "Jaccard";
@@ -185,9 +186,9 @@ mD = mtabData_pM_Reorder; % Set which normalization to use
 [tr,LabelOrder,LabelsOrdered] = bootstrapper(mD,sI,num_boots);
 
 % Heatmap of Metabolites
-HeatMapMtabs = mtabData_pmol(:,LabelOrder);
+HeatMapMtabs = mtabData_pmol_mgdry_hr(~mremove,LabelOrder);
 HeatMapMtabs(HeatMapMtabs==0) = NaN;
-h = heatmap(nicenames, LabelsOrdered+ string(1:22)', HeatMapMtabs');
+h = heatmap(nicenames(~mremove), LabelsOrdered+ string(1:22)', HeatMapMtabs');
 h.ColorLimits = [1,10];
 h.ColorScaling = "log";
 h.Colormap = flip(cmapper(colors,npts));
@@ -232,7 +233,7 @@ t = text(X(AboveMax), Y(AboveMax),"*");
 %     case "Euclidean"
 %         mnan = mtabData_pM_Reorder; % mtabData_pmol_mgdry;
 %         mnan(mnan<=0) = NaN;
-%         minm = min(min(mnan,[],2,"omitmissing"),[],1,"omitmissing");
+%         minm = min(min(mnan,[],2,"omitnan"),[],1,"omitnan");
 %         c = round(log2(minm)); d = 2^c;
 %         mnan(isnan(mnan))=0;
 %         ml2 = log2(mnan + d) - c;
@@ -308,8 +309,8 @@ t = text(X(AboveMax), Y(AboveMax),"*");
 %             end
 % 
 %         end
-%         Y = 1e4.*mean(Y0,3, 'omitmissing');
-%         stress = mean(stress0, 1, 'omitmissing');
+%         Y = 1e4.*mean(Y0,3, 'omitnan');
+%         stress = mean(stress0, 1, 'omitnan');
 % 
 %         % ml2_z = ml2;
 %         % ml2_z(isnan(ml2_z)|isinf(ml2_z))=0;
@@ -549,7 +550,7 @@ scattertabs(isnan(scattertabs))= 0;
 rI = sI(sI.Nominal_Duration_h==12,:);
 ictrl = rI.Species=="CTRL";
 rI = rI(rI.Species~="CTRL",:);
-meanctrlsc = mean(scattertabs(:,ictrl),2,"omitmissing");
+meanctrlsc = mean(scattertabs(:,ictrl),2,"omitnan");
 scattertabs = scattertabs(:,~ictrl)-meanctrlsc;
 scattertabs(scattertabs<0)=0;
 
@@ -594,7 +595,7 @@ scattertabs(isnan(scattertabs))= 0;
 rI = sI(sI.Nominal_Duration_h==12,:);
 ictrl = rI.Species=="CTRL";
 rI = rI(rI.Species~="CTRL",:);
-meanctrlsc = mean(scattertabs(:,ictrl),2,"omitmissing");
+meanctrlsc = mean(scattertabs(:,ictrl),2,"omitnan");
 scattertabs = scattertabs(:,~ictrl)-meanctrlsc;
 scattertabs(scattertabs<0)=0;
 scattertabs = scattertabs./rI.dryWeight'./hours(rI.duration)';
@@ -644,7 +645,7 @@ scattertabs(isnan(scattertabs))= 0;
 rI = sI(sI.Nominal_Duration_h==12,:);
 ictrl = rI.Species=="CTRL";
 rI = rI(rI.Species~="CTRL",:);
-meanctrlsc = mean(scattertabs(:,ictrl),2,"omitmissing");
+meanctrlsc = mean(scattertabs(:,ictrl),2,"omitnan");
 scattertabs = scattertabs(:,~ictrl)-meanctrlsc;
 scattertabs(scattertabs<0)=0;
 scattertabs = scattertabs./rI.dryWeight'./hours(rI.duration)';
@@ -869,8 +870,8 @@ ictrldead = (rI.Species=="CTRL" | rI.Notes=="DEAD");
 ictrl = rI.Species=="CTRL";
 rI = rI(~ictrldead,:);
 
-meanctrlsc = mean(elmC(:,ictrl),2,"omitmissing");
-meanctrlsn = mean(elmN(:,ictrl),2,"omitmissing");
+meanctrlsc = mean(elmC(:,ictrl),2,"omitnan");
+meanctrlsn = mean(elmN(:,ictrl),2,"omitnan");
 elmC = elmC(:,~ictrldead)-meanctrlsc;
 elmN = elmN(:,~ictrldead)-meanctrlsn;
 elmC(elmC<0)=0;elmN(elmN<0)=0;
@@ -1219,44 +1220,44 @@ iReject_Euph = Euphf1 | Euphf2 | Euphf3 | Euphf4;
 
 % The inventory
 Px_pmol0 = mtabData_pmol(:,t12i&iPx&~iDead); Px_pmol0(iReject_Px) = NaN;
-Px_pmol = mean(Px_pmol0,2,'omitmissing');
-Px_stde_pmol = std(Px_pmol0,[],2,'omitmissing');
+Px_pmol = mean(Px_pmol0,2,'omitnan');
+Px_stde_pmol = std(Px_pmol0,[],2,'omitnan');
 clear Px_pmol0
 
 Amph_pmol0 = mtabData_pmol(:,t12i&iAmph&~iDead); Amph_pmol0(iReject_Amph) = NaN;
-Amph_pmol = mean(Amph_pmol0,2,'omitmissing');
-Amph_stde_pmol = std(Amph_pmol0,[],2,'omitmissing');
+Amph_pmol = mean(Amph_pmol0,2,'omitnan');
+Amph_stde_pmol = std(Amph_pmol0,[],2,'omitnan');
 clear Amph_pmol0
 
 Clio_pmol0 = mtabData_pmol(:,t12i&iClio&~iDead); Clio_pmol0(iReject_Clio) = NaN;
-Clio_pmol = mean(Clio_pmol0,2,'omitmissing');
-Clio_stde_pmol = std(Clio_pmol0,[],2,'omitmissing');
+Clio_pmol = mean(Clio_pmol0,2,'omitnan');
+Clio_stde_pmol = std(Clio_pmol0,[],2,'omitnan');
 clear Clio_pmol0
 
 Euph_pmol0 = mtabData_pmol(:,t12i&iEuph&~iDead); Euph_pmol0(iReject_Euph) = NaN;
-Euph_pmol = mean(Euph_pmol0,2,'omitmissing');
-Euph_stde_pmol = std(Euph_pmol0,[],2,'omitmissing');
+Euph_pmol = mean(Euph_pmol0,2,'omitnan');
+Euph_stde_pmol = std(Euph_pmol0,[],2,'omitnan');
 clear Euph_pmol0
 
 % Now, the time-normalized inventory.
 Px_pmol_mgdry_hr0 = mtabData_pmol_mgdry_hr(:,t12i&iPx&~iDead); Px_pmol_mgdry_hr0(iReject_Px) = NaN;
-Px_pmol_mgdry_hr = mean(Px_pmol_mgdry_hr0,2,'omitmissing');
-Px_stde_pmol_mgdry_hr = std(Px_pmol_mgdry_hr0,[],2,'omitmissing');
+Px_pmol_mgdry_hr = mean(Px_pmol_mgdry_hr0,2,'omitnan');
+Px_stde_pmol_mgdry_hr = std(Px_pmol_mgdry_hr0,[],2,'omitnan');
 clear Px_pmol_mgdry_hr0
 
 Amph_pmol_mgdry_hr0 = mtabData_pmol_mgdry_hr(:,t12i&iAmph&~iDead); Amph_pmol_mgdry_hr0(iReject_Amph) = NaN;
-Amph_pmol_mgdry_hr = mean(Amph_pmol_mgdry_hr0,2,'omitmissing');
-Amph_stde_pmol_mgdry_hr = std(Amph_pmol_mgdry_hr0,[],2,'omitmissing');
+Amph_pmol_mgdry_hr = mean(Amph_pmol_mgdry_hr0,2,'omitnan');
+Amph_stde_pmol_mgdry_hr = std(Amph_pmol_mgdry_hr0,[],2,'omitnan');
 clear Amph_pmol_mgdry_hr0
 
 Clio_pmol_mgdry_hr0 = mtabData_pmol_mgdry_hr(:,t12i&iClio&~iDead); Clio_pmol_mgdry_hr0(iReject_Clio) = NaN;
-Clio_pmol_mgdry_hr = mean(Clio_pmol_mgdry_hr0,2,'omitmissing');
-Clio_stde_pmol_mgdry_hr = std(Clio_pmol_mgdry_hr0,[],2,'omitmissing');
+Clio_pmol_mgdry_hr = mean(Clio_pmol_mgdry_hr0,2,'omitnan');
+Clio_stde_pmol_mgdry_hr = std(Clio_pmol_mgdry_hr0,[],2,'omitnan');
 clear Clio_pmol_mgdry_hr0
 
 Euph_pmol_mgdry_hr0 = mtabData_pmol_mgdry_hr(:,t12i&iEuph&~iDead); Euph_pmol_mgdry_hr0(iReject_Euph) = NaN;
-Euph_pmol_mgdry_hr = mean(Euph_pmol_mgdry_hr0,2,'omitmissing');
-Euph_stde_pmol_mgdry_hr = std(Euph_pmol_mgdry_hr0,[],2,'omitmissing');
+Euph_pmol_mgdry_hr = mean(Euph_pmol_mgdry_hr0,2,'omitnan');
+Euph_stde_pmol_mgdry_hr = std(Euph_pmol_mgdry_hr0,[],2,'omitnan');
 clear Euph_pmol_mgdry_hr0
 
 

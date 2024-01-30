@@ -308,7 +308,7 @@ clear mn
 % The first, using the diss_inv to see if the controls are significantly
 % different from the samples...
 grps = iallctrl+1;
-disp(grpn_inv)
+%disp(grpn_inv)
 ANOSIM_inv = f_anosim(diss_inv,grps,1,1000,1,1);
 
 clear grps
@@ -319,6 +319,52 @@ disp(grpn_rate)
 ANOSIM_rate = f_anosim(diss_rate,grps,1,1000,1,1);
 
 clear grps
+
+%% 27 Dec 2023: Different scaling relationship?
+% Testing here the power-law relationship fit between biomass and
+% excretion.
+
+t12an = iAnimal&t12i;
+rnonlog = mtabData_pmol(:,t12an)'./hours(sI.duration(t12an));
+pwrE = real(log(rnonlog));
+pwrE(isinf(pwrE))=NaN;
+% Eliminate things with <3 data points
+pwrBad = sum(~(pwrE==0|isnan(pwrE)))<5;
+pwrE = pwrE(:,~pwrBad); pwrNames = nicenames(~pwrBad);
+rnonlog = rnonlog(:,~pwrBad);
+for ii = 1:length(pwrNames)
+    lm = fitlm(sI.dryWeight(t12an),pwrE(:,ii));
+    if lm.Rsquared.Adjusted>0.8
+        figure
+        A = exp(lm.Coefficients.Estimate(1));
+        b = lm.Coefficients.Estimate(2);
+        x = linspace(min(sI.dryWeight(t12an)),max(sI.dryWeight(t12an)),100);
+        y = A.*exp(b.*x);
+        plot(x,y)
+        hold on
+        %plot(x,exp(lm.)
+        scatter(sI.dryWeight(t12an),rnonlog(:,ii));
+        %plot(lm); 
+        title([pwrNames(ii)+" R^2= "+string(lm.Rsquared.Adjusted)]);
+        xlabel("Dry Biomass, mg")
+        ylabel("R, pmol hr^{-1}", "Interpreter","tex")
+        ylim([0,max(rnonlog(:,ii))+5])
+        ax1 = gca;
+        pos = ax1.Position;
+        ax2 = axes("Position",[0.200 0.5 0.3 0.3]);
+        plot(x,y)
+        hold on
+        %plot(x,exp(lm.)
+        scatter(sI.dryWeight(t12an),rnonlog(:,ii));
+        ylim([0,max(rnonlog(rnonlog(:,ii)<max(rnonlog(:,ii)),ii))+5]);
+        xlim([0 4.5])
+    end
+
+end
+
+t6px = t6i&iPx;
+
+
 %% Scatterplot; by species
 
 scattertabs = mtabData_pmol_mgdry_hr(~mremove,t12i|t6i)';

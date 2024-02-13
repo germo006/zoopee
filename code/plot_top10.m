@@ -1,9 +1,11 @@
+
 Px6 = t6i & iPx;
-mtabData_px6 = mtabData_pmol(:,Px6);
+mtabData_px6 = mtabData_pmol(~mremove,Px6);
 mtabData_px6(mtabData_px6<0) = NaN;
 mtabData_px6m = mean(mtabData_px6,2,"omitnan");
 [sortpx6m,ipx6m] = sort(mtabData_px6m, "descend", "MissingPlacement", "last");
-namespx6m = nicenames(ipx6m);
+namespx6m = nicenames(~mremove);
+namespx6m = namespx6m(ipx6m);
 mtabData_px6s = std(mtabData_px6,[],2,"omitnan")./sqrt(3);
 sortpx6s = mtabData_px6s(ipx6m);
 h = sortpx6m(1:10); n = namespx6m(1:10); er = sortpx6s(1:10);
@@ -22,4 +24,5 @@ ylim([0,bb(10).YEndPoints+er(10)]);
 xlim([0.45,1.7])
 xticks([])
 xlabel("6 h mean \it{P. xiphias}")
-ylabel("Metabolite excreted (pmol) relative to control.")
+ylabel("Metabolite excreted (pmol)")
+hold off

@@ -1,6 +1,6 @@
-% Noah Germolus 28 Nov 2023
-% This is meant to be the slimmed-down analysis script which puts out just
-% the results and figures that will be necessary. 
+% Noah Germolus 06 Feb 2024
+% This is v3 of Analysis. It will remove dead animals from processing, as
+% well as calculate the rates and regressions differently.
 
 clear; clc;  
 close all
@@ -8,7 +8,7 @@ close all
 % Loads data and metadata.
 loadstuff
 
-outdir = '../figs/zoopfigs1';
+outdir = '../figs/zoopfigs_v3';
 if ~exist(outdir, 'dir')
     mkdir(outdir)
 end
@@ -20,9 +20,9 @@ npts = 1000;
 %% Calculations.
 %
 %   I want to calculate several things. 
-%   -change in concentration from the t0 controls. This will be done by
-%       subtracting the mean control at t0 from each concentration, including
-%       the additional controls. 
+%   -change in concentration: THIS IS DIFFERENT IN v3. Now, the difference
+%   between the time-matched control and the t0 control is subtracted from
+%   the time-point. This may result in higher numbers for many samples. 
 %   -change in inventory: same calculation, using the volume-normalized
 %       mtabData_pmol
 %   -change at 12h on a dry-mass basis. This will utilize the
@@ -30,6 +30,9 @@ npts = 1000;
 %       weight of the bugs. 
 %
 
+% Dead animals
+idead = sI.Notes == "DEAD";
+sI(idead,:) = [];
 % Determine the actual incubation durations. 
 sI.duration = sI.TimeStop - sI.TimeStart;
 
@@ -49,6 +52,7 @@ iAmph = sI.Species == "Amphipod (long skinny)";
 iEuph = sI.Species == "Euph";
 iAnimal = iClio | iPx | iAmph | iEuph;
 
+
 % Find mean control values. 
 meanctrl0 = mean(mtabData_pM_Reorder(:,t0ctrl_i),2);
 meanctrl6 = mean(mtabData_pM_Reorder(:,t6ctrl_i),2);
@@ -63,11 +67,14 @@ ste_ctrls = [stdvctrl0, stdvctrl6, stdvctrl12];
 
 % Calculations to determine the inventories and rates to a first degree
 % with control subtraction. 
+% Get rid of deads
+mtabData_pM_Reorder = mtabData_pM_Reorder(:,~idead);
 % Subrtract time-matched controls.
 mtabData_pM_Reorder_subctrl = mtabData_pM_Reorder;
 mtabData_pM_Reorder_subctrl(:,sI.Nominal_Duration_h==0) = mtabData_pM_Reorder_subctrl(:,sI.Nominal_Duration_h==0) - meanctrl0;
-mtabData_pM_Reorder_subctrl(:,sI.Nominal_Duration_h==6) = mtabData_pM_Reorder_subctrl(:,sI.Nominal_Duration_h==6) - meanctrl6;
-mtabData_pM_Reorder_subctrl(:,sI.Nominal_Duration_h==12) = mtabData_pM_Reorder_subctrl(:,sI.Nominal_Duration_h==12) - meanctrl12;
+mtabData_pM_Reorder_subctrl(:,sI.Nominal_Duration_h==6) = mtabData_pM_Reorder_subctrl(:,sI.Nominal_Duration_h==6) - (meanctrl6-meanctrl0);
+mtabData_pM_Reorder_subctrl(:,sI.Nominal_Duration_h==12) = mtabData_pM_Reorder_subctrl(:,sI.Nominal_Duration_h==12) - (meanctrl12-meanctrl0);
+mtabData_pM_Reorder_subctrl(mtabData_pM_Reorder_subctrl<0) = NaN;
 
 % Multiply by volume.
 mtabData_pmol = (mtabData_pM_Reorder_subctrl' .* (sI.Volume_mL_./1000))';
@@ -155,9 +162,6 @@ Clio_stde_pmol_mgdry_hr = nanstd(mtabData_pmol_mgdry_hr(:,iClio),[],2);
 Euph_pmol_mgdry_hr = nanmean(mtabData_pmol_mgdry_hr(:,iEuph),2);
 Euph_stde_pmol_mgdry_hr = nanstd(mtabData_pmol_mgdry_hr(:,iEuph),[],2);
 
-%% Please ignore
-%lizplot_top10
-
 %%  Creating a screening process for metabolites that are too high in the
 % control or else just bad ones that slipped past the automated QC
 
@@ -170,6 +174,10 @@ rmNames = ["2'deoxyguanosine Na","S-(5'-adenosyl)-L-homocysteine",...
 [~, ibad] = ismember(rmNames, mtabNames); mremove(ibad) = 1;
 
 clear rmNames mtab_pM_notctrl mtab_pM_ctrl
+
+%% Just giving you some idea of what the top ten
+% mean excreted compounds are for P. xiphias, 6 h
+plot_top10
 
 %% Heatmap plot
 % Originally, this section contained a lot about ordinating and clustering
@@ -188,12 +196,12 @@ HeatMapMtabs = mtabData_pmol_mgdry_hr(~mremove, ~iallctrl);
 HeatMapMtabs = round(HeatMapMtabs(:,LabelOrder));
 HeatMapMtabs(HeatMapMtabs<=0) = NaN;
 ihrm = (sum(isnan(HeatMapMtabs),2)==size(HeatMapMtabs,2));
-LiveDead = sI.Notes(~iallctrl); LiveDead = string(LiveDead(LabelOrder));
+% LiveDead = sI.Notes(~iallctrl); LiveDead = string(LiveDead(LabelOrder));
 TimePointInfo = sI.Nominal_Duration_h(~iallctrl); 
 TimePointInfo = string(TimePointInfo(LabelOrder));
 hxdata = nicenames(~mremove);
-hydata = LabelsOrdered+ " " + TimePointInfo +" h " + LiveDead+ " " +...
-    string(1:size(LiveDead,1))';
+hydata = LabelsOrdered+ " " + TimePointInfo +" h "+...% + LiveDead+ " " +...
+    string(1:size(TimePointInfo,1))';
 hxdata(ihrm,:)=[];
 HeatMapMtabs(ihrm,:)=[];
 % Make the heatmap.
@@ -239,12 +247,12 @@ HeatMapMtabs = mtabData_pmol_mgdry_hr(~mremove, ~iallctrl);
 HeatMapMtabs = round(HeatMapMtabs(:,LabelOrder));
 HeatMapMtabs(HeatMapMtabs<=0) = NaN;
 ihrm = (sum(isnan(HeatMapMtabs),2)==size(HeatMapMtabs,2));
-LiveDead = sI.Notes(~iallctrl); LiveDead = string(LiveDead(LabelOrder));
+%LiveDead = sI.Notes(~iallctrl); LiveDead = string(LiveDead(LabelOrder));
 TimePointInfo = sI.Nominal_Duration_h(~iallctrl); 
 TimePointInfo = string(TimePointInfo(LabelOrder));
 hxdata = nicenames(~mremove);
-hydata = LabelsOrdered+ " " + TimePointInfo +" h " + LiveDead+ " " +...
-    string(1:size(LiveDead,1))';
+hydata = LabelsOrdered+ " " + TimePointInfo +" h "+... % + LiveDead+ " " +...
+    string(1:size(TimePointInfo,1))';
 hxdata(ihrm,:)=[];
 HeatMapMtabs(ihrm,:)=[];
 
@@ -261,6 +269,7 @@ tooHigh_map(ihrm,:) = [];
 tooHigh_map = tooHigh_map(iam(1:10),:);
 
 % Make the heatmap.
+f = figure;
 h = heatmap(hydata, hxdata, HeatMapMtabs);
 % h.ColorLimits = [1,10];
 h.ColorScaling = "scaledcolumns";
@@ -269,6 +278,7 @@ h.FontSize = 12;
 h.ColorbarVisible = "off";
 axp = struct(gca);       %you will get a warning
 axp.Axes.XAxisLocation = 'top';
+ax = gca;
 
 % Add the "Above the standard curve" markers
 if 0
@@ -276,10 +286,10 @@ if 0
     AboveMax = mtabData_pM_Reorder(~mremove,~iallctrl);
     AboveMax = AboveMax(:,LabelOrder)>MaxRM;
     AboveMax = flip(AboveMax',1);
-    ax = axes(gcf, "Position", h.Position, "Units","normalized","Color", "none");
-    ax.Box = "off";
-    set(ax, "XTick", [], "YTick", [])
-    ax.XLim = [0 size(AboveMax,2)]; ax.YLim = [0 size(AboveMax,1)];
+    ax2 = axes(f,"Position", ax.Position,"Color", "none");
+    ax2.Box = "off";
+    set(ax2, "XTick", [], "YTick", [])
+    ax2.XLim = [0 size(AboveMax,2)]; ax2.YLim = [0 size(AboveMax,1)];
     [X,Y] = meshgrid(0:size(AboveMax,2),0:size(AboveMax,1));
     t = text(X(AboveMax), Y(AboveMax),"*");
 end
@@ -290,7 +300,7 @@ end
 % toolbox: f_braycurtis, f_anosim, and f_anosim2
 % also requires dependencies, so really you should download the fathom
 % toolbox and include it as below.
-addpath("C:/Users/germo/Documents/MATLAB/Fathom/")
+addpath("F:/Noah Germolus/Documents/MATLAB/Fathom/")
 
 % First-things first is constructing two dissimilarity matrices:
 % One that includes all samples on a mole inventory basis...
@@ -311,63 +321,74 @@ grps = iallctrl+1;
 %disp(grpn_inv)
 ANOSIM_inv = f_anosim(diss_inv,grps,1,1000,1,1);
 
-clear grps
-% ...and the second, to drill down into the rates themselves without the
-% controls. 
-[grps, grpn_rate] = findgroups(sI.AccurateSpecies(~iallctrl));
-disp(grpn_rate)
-ANOSIM_rate = f_anosim(diss_rate,grps,1,1000,1,1);
+% clear grps
+% % ...and the second, to drill down into the rates themselves without the
+% % controls. 
+% [grps, grpn_rate] = findgroups(sI.AccurateSpecies(~iallctrl));
+% disp(grpn_rate)
+% ANOSIM_rate = f_anosim(diss_rate,grps,1,1000,1,1);
 
 clear grps
 
 %% 27 Dec 2023: Different scaling relationship?
+% Correlations between mass and 12 h export
+in = (sI.Species ~="CTRL");
+
 % Testing here the power-law relationship fit between biomass and
 % excretion.
-
-t12an = iAnimal&t12i;
-rnonlog = mtabData_pmol(:,t12an)'./hours(sI.duration(t12an));
-pwrE = real(log(rnonlog));
+rnonlog = mtabData_pmol(~mremove,in)'./hours(sI.duration(in));
+pwrE = log(rnonlog);
 pwrE(isinf(pwrE))=NaN;
+pwrM = log(sI.dryWeight(in));
 % Eliminate things with <3 data points
-pwrBad = sum(~(pwrE==0|isnan(pwrE)))<5;
-pwrE = pwrE(:,~pwrBad); pwrNames = nicenames(~pwrBad);
+pwrBad = sum(~(isnan(pwrE)))<3;
+pwrE = pwrE(:,~pwrBad); 
+pwrNames = nicenames(~mremove);
+pwrNames = nicenames(~pwrBad);
 rnonlog = rnonlog(:,~pwrBad);
+R2 = zeros(size(pwrNames));
+p = zeros(size(pwrNames));
+m = zeros(size(pwrNames));
+b = zeros(size(pwrNames));
+n = zeros(size(pwrNames));
+resTable = table(pwrNames, m, b, R2, p);
 for ii = 1:length(pwrNames)
-    lm = fitlm(sI.dryWeight(t12an),pwrE(:,ii));
-    if lm.Rsquared.Adjusted>0.8
+    lm = fitlm(pwrM,pwrE(:,ii));
+    resTable.b(ii) = lm.Coefficients.Estimate(1);
+    resTable.m(ii) = lm.Coefficients.Estimate(2);
+    resTable.R2(ii) = lm.Rsquared.Adjusted;
+    resTable.p(ii) = lm.ModelFitVsNullModel.Pvalue;
+    resTable.n(ii) = sum(~isnan(pwrE(:,ii)));
+    if lm.Rsquared.Ordinary>0.5
         figure
-        A = exp(lm.Coefficients.Estimate(1));
-        b = lm.Coefficients.Estimate(2);
-        x = linspace(min(sI.dryWeight(t12an)),max(sI.dryWeight(t12an)),100);
-        y = A.*exp(b.*x);
-        plot(x,y)
-        hold on
-        %plot(x,exp(lm.)
-        scatter(sI.dryWeight(t12an),rnonlog(:,ii));
-        %plot(lm); 
-        title([pwrNames(ii)+" R^2= "+string(lm.Rsquared.Adjusted)]);
+        x = linspace(min(pwrM),max(pwrM),100);
+        y = x.*resTable.m(ii)+resTable.b(ii);   
+        plot(exp(x),exp(y))
+        hold on 
+        scatter(sI.dryWeight(in),rnonlog(:,ii));   
+        title([pwrNames(ii)+" R^2= "+string(resTable.R2(ii))]);
         xlabel("Dry Biomass, mg")
         ylabel("R, pmol hr^{-1}", "Interpreter","tex")
-        ylim([0,max(rnonlog(:,ii))+5])
+        ylim([0,max(pwrE(:,ii))+5])
         ax1 = gca;
-        pos = ax1.Position;
-        ax2 = axes("Position",[0.200 0.5 0.3 0.3]);
-        plot(x,y)
-        hold on
-        %plot(x,exp(lm.)
-        scatter(sI.dryWeight(t12an),rnonlog(:,ii));
-        ylim([0,max(rnonlog(rnonlog(:,ii)<max(rnonlog(:,ii)),ii))+5]);
-        xlim([0 4.5])
+        ax1.XScale = "log";
+        ax1.YScale = "log";
+        % pos = ax1.Position;
+        % ax2 = axes("Position",[0.200 0.5 0.3 0.3]);
+        % plot(x,y)
+        % hold on
+        % %plot(x,exp(lm.)
+        % scatter(sI.dryWeight(t12an),rnonlog(:,ii));
+        % ylim([0,max(rnonlog(rnonlog(:,ii)<max(rnonlog(:,ii)),ii))+5]);
+        % xlim([0 4.5])
     end
 
 end
-
-t6px = t6i&iPx;
-
+resTable = sortrows(resTable,"R2","descend");
 
 %% Scatterplot; by species
 
-scattertabs = mtabData_pmol_mgdry_hr(~mremove,t12i|t6i)';
+scattertabs = mtabData_pmol_mgdry_hr(~mremove,(t12i|t6i))';
 scattertabs(isnan(scattertabs))= 0;
 rI = sI(t12i|t6i,:);
 ictrl = rI.Species=="CTRL";
@@ -392,22 +413,30 @@ med = median([pxtabs6;pxtabs12],1,"omitnan");
 % pxtabs12 = pxtabs12(:,ia(~below));
 pxnames = nicenames(~mremove); 
 pxnames = pxnames(ia); %pxnames(ia(~below));
+
 xPx6 = repmat(1:size(pxnames,1),1,sum(rI.Species=="PX"&rI.Nominal_Duration_h==6))'; %1:sum(~below)
 xPx12 = repmat(1:size(pxnames,1),1,sum(rI.Species=="PX"&rI.Nominal_Duration_h==12))'; %1:sum(~below)
 bmmPx6 = reshape(pxtabs6(:,ia),length(xPx6),1);
 bmmPx12 = reshape(pxtabs12(:,ia),length(xPx12),1);
-sc1 = scatter(xPx6,bmmPx6, 40, CP1{2},"v");
+sc1 = scatter(xPx6,bmmPx6, 65, CP1{5},"v","LineWidth",2);
 hold on
-sc2 = scatter(xPx12,bmmPx12, 40, CP1{2},'filled',"^");
+sc2 = scatter(xPx12,bmmPx12, 65, CP1{5},'filled',"^");
 ax = gca;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
 set(ax,"XLim",[0 1+length(pxnames)], "YScale","log");
 set(ax,"XTick",1:length(pxnames), "XTickLabels", pxnames,"XTickLabelRotation",45)
 h = hline(kthresh, ax.XLim);
+%%% FORMAT THESE
+xl6 = log10(bmmPx6); xl6(isinf(xl6))=NaN;
+xl12 = log10(bmmPx12); xl12(isinf(xl12))=NaN;
+lm6 = fitlm(xPx6,xl6); lm12 = fitlm(xPx12,xl12);
+fl6 = plot(xPx6,10.^(predict(lm6,xPx6)), "HandleVisibility","on", "LineStyle","-","Color",[0.5 0.5 0.5], "LineWidth",2.5);
+fl12 = plot(xPx12,10.^(predict(lm12,xPx12)), "HandleVisibility","on", "LineStyle",'-',"Color",[0.2 0.2 0.2], "LineWidth",2.5);
+%%%
 xL = 1.5:1:(1.5+size(pxnames,1)-2);
-xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
+xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",.5.*CP1{5},"HandleVisibility","off")
 title("Pleuromamma xiphias", "FontAngle","italic")
-legend(["t = 6 h", "t = 12 h"], "Location","northwest")
+legend(["t = 6 h", "t = 12 h", "6 h trendline", "12 h trendline"], "Location","northwest")
 
 subplot(2,2,2)
 % C. py plot.
@@ -418,27 +447,29 @@ kthresh = kfun(meanmass);
 med = median(cptabs,1,"omitnan");
 [~,ia] = sort(med);
 tempI = rI(rI.Species=="C. pyrimidata",:);
-idead = tempI.Notes=="DEAD";
-idead = repmat(idead',1,size(cptabs,2))';
+% idead = tempI.Notes=="DEAD";
+% idead = repmat(idead',1,size(cptabs,2))';
 cptabs = cptabs(:,ia);
 cpnames = nicenames(~mremove); 
 cpnames = cpnames(ia);
-xCp = repelem(1:size(cpnames,1),1,length(rI.Species(rI.Species=="C. pyrimidata")))';
-bmmCp = reshape(cptabs,length(xCp),1);
-sc2 = scatter(xCp(~idead),bmmCp(~idead), 40, CP1{3},'filled',"square");
-hold on
-sc3 = scatter(xCp(idead),bmmCp(idead), 40, CP1{3},"square");
+noplot = mean(cptabs,1)==0;
+xCp = repelem(1:size(cpnames(~noplot),1),1,length(rI.Species(rI.Species=="C. pyrimidata")))';
+bmmCp = reshape(cptabs(~noplot),length(xCp),1);
+sc2 = scatter(xCp,bmmCp, 65, CP1{3},'filled',"square");
+%sc2 = scatter(xCp(~idead),bmmCp(~idead), 65, CP1{3},'filled',"square");
+% hold on
+% sc3 = scatter(xCp(idead),bmmCp(idead), 65, CP1{3},"square");
 ax = gca;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
-set(ax,"XLim",[0 1+length(cpnames)], "YScale","log");
-set(ax,"XTick",1:length(cpnames), "XTickLabels", cpnames,"XTickLabelRotation",45)
+set(ax,"XLim",[0 1+length(cpnames(~noplot))], "YScale","log");
+set(ax,"XTick",1:length(cpnames(~noplot)), "XTickLabels", cpnames(~noplot),"XTickLabelRotation",45)
 hold on
-xL = 1.5:1:(1.5+size(cpnames,1)-2);
+xL = 1.5:1:(1.5+size(cpnames(~noplot),1)-2);
 h = hline(kthresh, ax.XLim);
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
-clear tempI idead
+clear tempI % idead
 title("Clio pyrimidata", "FontAngle","italic")
-legend(["live","dead"], "Location","northwest")
+%legend(["live","dead"], "Location","northwest")
 
 subplot(2,2,3)
 % Euph plot.
@@ -449,28 +480,30 @@ kthresh = kfun(meanmass);
 med = median(eutabs,1,"omitnan");
 [~,ia] = sort(med);
 tempI = rI(rI.Species=="Euph",:);
-idead = tempI.Notes=="DEAD";
-idead = repmat(idead',1,size(eutabs,2))';
+% idead = tempI.Notes=="DEAD";
+% idead = repmat(idead',1,size(eutabs,2))';
 eutabs = eutabs(:,ia);
+noplot = mean(eutabs,1)==0;
 eunames = nicenames(~mremove); 
 eunames = eunames(ia);
+eutabs = eutabs(:,~noplot);
+eunames = eunames(~noplot);
 xEu = repelem(1:size(eunames,1),1,length(rI.Species(rI.Species=="Euph")))';
 bmmEu = reshape(eutabs,length(xEu),1);
-sc2 = scatter(xEu(~idead),bmmEu(~idead), 40, CP1{1},'filled',"hexagram");
+sc2 = scatter(xEu,bmmEu, 65, CP1{1},'filled',"hexagram");
 hold on
-sc3 = scatter(xEu(idead),bmmEu(idead), 40, CP1{1},"hexagram");
+% sc3 = scatter(xEu(idead),bmmEu(idead), 65, CP1{1},"hexagram");
 ax = gca;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
-
 set(ax,"XLim",[0 1+length(eunames)], "YScale","log");
 set(ax,"XTick",1:length(eunames), "XTickLabels", eunames,"XTickLabelRotation",45)
 h = hline(kthresh, ax.XLim);
 hold on
 xL = 1.5:1:(1.5+size(eunames,1)-2);
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
-clear tempI idead
-title("Euphausiids")
-legend(["\it{Hansarsia microps}","{\itStylocheiron abbreviatum} (dead)"], "Location","northwest")
+clear tempI %idead
+title("Hansarsia microps", "FontAngle","italic")
+%legend(["\it{Hansarsia microps}","{\itStylocheiron abbreviatum} (dead)"], "Location","northwest")
 
 subplot(2,2,4)
 % Amph plot
@@ -483,9 +516,12 @@ med = median(amtabs,1,"omitnan");
 amtabs = amtabs(:,ia);
 amnames = nicenames(~mremove); 
 amnames = amnames(ia);
+noplot = mean(amtabs,1)==0;
+amnames = amnames(~noplot);
+amtabs = amtabs(:,~noplot);
 xAm = repelem(1:size(amnames,1),1,length(rI.Species(rI.Species=="Amphipod (long skinny)")))';
 bmmAm = reshape(amtabs,length(xAm),1);
-sc2 = scatter(xAm,bmmAm, 40, CP1{4},'filled',"diamond");
+sc2 = scatter(xAm,bmmAm, 65, "k",'filled',"diamond");
 hold on
 ax = gca;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
@@ -501,11 +537,22 @@ title("\it{Scina} spp.")
 %% Scatterplot; all at once.
 
 scattertabs = mtabData_pmol_mgdry_hr(~mremove,t12i|t6i)';
+rI = sI(t12i|t6i,:);
+ictrl = rI.Species=="CTRL";
+rI = rI(~ictrl,:);
+scattertabs = scattertabs(~ictrl,:);
+scattertabs(scattertabs<= 0)= NaN;
 med = median(scattertabs,1,"omitnan");
-[~,ia] = sort(med);
+[~,ia] = sort(med, "descend");
 names = nicenames(~mremove);
 names = names(ia);
 scatter_sort = scattertabs(:,ia);
+names(sum(isnan(scatter_sort),1)>9,: ) = [];
+scatter_sort(:,sum(isnan(scatter_sort),1)>9) = [];
+names = names(1:15);
+scatter_sort = scatter_sort(:,1:15);
+
+
 
 % P. xiphias plot.
 pxtabs6 = scatter_sort(rI.Species == "PX"&rI.Nominal_Duration_h==6,:);
@@ -516,9 +563,9 @@ xPx6 = repmat(1:size(names,1),1,sum(rI.Species=="PX"&rI.Nominal_Duration_h==6))'
 xPx12 = repmat(1:size(names,1),1,sum(rI.Species=="PX"&rI.Nominal_Duration_h==12))'; %1:sum(~below)
 bmmPx6 = reshape(pxtabs6,length(xPx6),1);
 bmmPx12 = reshape(pxtabs12,length(xPx12),1);
-sc1 = scatter(xPx6,bmmPx6, 40, CP1{2},"v");
+sc1 = scatter(xPx6,bmmPx6, 65, CP1{5},"v", "LineWidth",2.5);
 hold on
-sc2 = scatter(xPx12,bmmPx12, 40, CP1{2},'filled',"^");
+sc2 = scatter(xPx12,bmmPx12, 65, CP1{5},'filled',"^", "LineWidth",2.5);
 xL = 1.5:1:(1.5+size(names,1)-2);
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibility","off")
 
@@ -528,13 +575,13 @@ cptabs = scatter_sort(rI.Species == "C. pyrimidata",:);
 meanmass = mean(rI.dryWeight(rI.Species == "C. pyrimidata"));
 kthresh2 = kfun(meanmass);
 tempI = rI(rI.Species=="C. pyrimidata",:);
-idead = tempI.Notes=="DEAD";
-idead = repmat(idead',1,size(cptabs,2))'; 
+% idead = tempI.Notes=="DEAD";
+% idead = repmat(idead',1,size(cptabs,2))';
 xCp = repelem(1:size(names,1),1,length(rI.Species(rI.Species=="C. pyrimidata")))';
 bmmCp = reshape(cptabs,length(xCp),1);
-sc3 = scatter(xCp(~idead),bmmCp(~idead), 40, CP1{3},'filled',"square");
-sc4 = scatter(xCp(idead),bmmCp(idead), 40, CP1{3},"square");
-clear tempI idead
+%sc3 = scatter(xCp(~idead),bmmCp(~idead), 65, CP1{3},'filled',"square");
+sc4 = scatter(xCp,bmmCp, 65, CP1{3},"filled","square", "LineWidth",2.5);
+clear tempI %idead
 
 
 % Euph plot.
@@ -542,12 +589,12 @@ eutabs = scatter_sort(rI.Species == "Euph",:);
 meanmass = mean(rI.dryWeight(rI.Species == "Euph"));
 kthresh3 = kfun(meanmass);
 tempI = rI(rI.Species=="Euph",:);
-idead = tempI.Notes=="DEAD";
-idead = repmat(idead',1,size(eutabs,2))';
+% idead = tempI.Notes=="DEAD";
+% idead = repmat(idead',1,size(eutabs,2))';
 xEu = repelem(1:size(names,1),1,length(rI.Species(rI.Species=="Euph")))';
 bmmEu = reshape(eutabs,length(xEu),1);
-sc5 = scatter(xEu(~idead),bmmEu(~idead), 40, CP1{1},'filled',"hexagram");
-sc6 = scatter(xEu(idead),bmmEu(idead), 40, CP1{1},"hexagram");
+sc5 = scatter(xEu,bmmEu, 65, CP1{1},'filled',"hexagram", "LineWidth",2.5);
+% sc6 = scatter(xEu(idead),bmmEu(idead), 65, CP1{1},"hexagram");
 clear tempI idead
 
 % Amph plot
@@ -556,23 +603,24 @@ meanmass = mean(rI.dryWeight(rI.Species == "Amphipod (long skinny)"));
 kthresh4 = kfun(meanmass);
 xAm = repelem(1:size(names,1),1,length(rI.Species(rI.Species=="Amphipod (long skinny)")))';
 bmmAm = reshape(amtabs,length(xAm),1);
-sc7 = scatter(xAm,bmmAm, 40, CP1{4},'filled',"diamond");
+sc7 = scatter(xAm,bmmAm, 65, "k",'filled',"diamond", "LineWidth",2.5);
 ax = gca;
 h1 = hline(kthresh1, ax.XLim);
-h1.Color = CP1{2}; h1.LineWidth = 2;
+h1.Color = CP1{5}; h1.LineWidth = 2;
 h2 = hline(kthresh2, ax.XLim);
 h2.Color = CP1{3}; h2.LineWidth = 2;
+h2.LineStyle = ":";
 h3 = hline(kthresh3, ax.XLim);
 h3.Color = CP1{1}; h3.LineWidth = 2;
 h4 = hline(kthresh4, ax.XLim);
-h4.Color = CP1{4}; h4.LineWidth = 2;
+h4.Color = "k"; h4.LineWidth = 2;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
 set(ax,"XLim",[0 1+length(names)], "YScale","log");
 set(ax,"XTick",1:length(names), "XTickLabels", names,"XTickLabelRotation",45)
 title("All Species' Excretion Rates", "FontWeight","bold")
 legend(["\it{P. xiphias}_{6h}", "\it{P. xiphias}_{12h}",...
-    "\it{C. pyrimidata} (live)","\it{C. pyrimidata} (dead)",...
-    "\it{Hansarsia microps}","{\itStylocheiron abbreviatum} (dead)",...
+    "\it{C. pyrimidata}",..."\it{C. pyrimidata} (dead)",...
+    "\it{Hansarsia microps}",..."{\itStylocheiron abbreviatum} (dead)",...
     "\it{Scina} spp."], "Location","northwest")
 
 if 0
@@ -594,14 +642,13 @@ elmN = totN(:,sI.Nominal_Duration_h==12);
 elmC(isnan(elmC))= 0; elmN(isnan(elmN))= 0;
 rI = sI(sI.Nominal_Duration_h==12,:);
 
-ictrldead = (rI.Species=="CTRL" | rI.Notes=="DEAD");
 ictrl = rI.Species=="CTRL";
-rI = rI(~ictrldead,:);
+rI = rI(~ictrl,:);
 
-meanctrlsc = mean(elmC(:,ictrl),2,"omitnan");
-meanctrlsn = mean(elmN(:,ictrl),2,"omitnan");
-elmC = elmC(:,~ictrldead)-meanctrlsc;
-elmN = elmN(:,~ictrldead)-meanctrlsn;
+% meanctrlsc = mean(elmC(:,ictrl),2,"omitnan");
+% meanctrlsn = mean(elmN(:,ictrl),2,"omitnan");
+elmC = elmC(:,~ictrl);%-meanctrlsc;
+elmN = elmN(:,~ictrl);%-meanctrlsn;
 elmC(elmC<0)=0;elmN(elmN<0)=0;
 itaurine = (mtabNames(~mremove)=="taurine"); iglycine = (mtabNames(~mremove)=="glycine");
 ihsb = (mtabNames(~mremove)=="homoserine betaine"); iput = (mtabNames(~mremove)=="putrescine");
@@ -612,12 +659,14 @@ Cgly = elmC(iglycine,:); Ngly = elmN(iglycine,:);
 Chsb = elmC(ihsb,:); Nhsb = elmN(ihsb,:);
 Cput = elmC(iput,:); Nput = elmN(iput,:);
 Carg = elmC(iarg,:); Narg = elmN(iarg,:);
-Cser = elmC(iser,:); Nser = elmN(iser,:);
+% Cser = elmC(iser,:); Nser = elmN(iser,:);
 Cala = elmC(iala,:); Nala = elmN(iala,:);
 Cnbz = elmC(inbz,:); Nnbz = elmN(inbz,:);
 
 elmC = sum(elmC,1);elmN = sum(elmN,1);
 [G, ID] = findgroups(rI.Species);
+
+mfunc = @(x) mean(x,1,"omitmissing");
 
 MeanChsb = splitapply(@mean,Chsb,G'); MeanChsb = MeanChsb([4,2,1,3])./1e6;
 MeanNhsb = splitapply(@mean,Nhsb,G'); MeanNhsb = MeanNhsb([4,2,1,3])./1e6;
@@ -628,8 +677,8 @@ MeanNput = splitapply(@mean,Nput,G'); MeanNput = MeanNput([4,2,1,3])./1e6;
 MeanCarg = splitapply(@mean,Carg,G'); MeanCarg = MeanCarg([4,2,1,3])./1e6;
 MeanNarg = splitapply(@mean,Narg,G'); MeanNarg = MeanNarg([4,2,1,3])./1e6;
 
-MeanCser = splitapply(@mean,Cser,G'); MeanCser = MeanCser([4,2,1,3])./1e6;
-MeanNser = splitapply(@mean,Nser,G'); MeanNser = MeanNser([4,2,1,3])./1e6;
+% MeanCser = splitapply(@mean,Cser,G'); MeanCser = MeanCser([4,2,1,3])./1e6;
+% MeanNser = splitapply(@mean,Nser,G'); MeanNser = MeanNser([4,2,1,3])./1e6;
 
 MeanCala = splitapply(@mean,Cala,G'); MeanCala = MeanCala([4,2,1,3])./1e6;
 MeanNala = splitapply(@mean,Nala,G'); MeanNala = MeanNala([4,2,1,3])./1e6;
@@ -647,8 +696,8 @@ MeanC = splitapply(@mean,elmC,G'); MeanC = MeanC([4,2,1,3])./1e6;
 MeanN = splitapply(@mean,elmN,G'); MeanN = MeanN([4,2,1,3])./1e6;
 
 
-mtabC = [MeanChsb;MeanCput;MeanCarg;MeanCser;MeanCala;MeanCt;MeanCg;MeanCnbz];
-mtabN = [MeanNhsb;MeanNput;MeanNarg;MeanNser;MeanNala;MeanNt;MeanNg;MeanNnbz];
+mtabC = [MeanChsb;MeanCput;MeanCarg;MeanCala;MeanCt;MeanCg;MeanCnbz];% MeanCser;
+mtabN = [MeanNhsb;MeanNput;MeanNarg;MeanNala;MeanNt;MeanNg;MeanNnbz];%MeanNser;
 %CT = DCN{1,2:end} - DCN{1,1};
 %NT = DCN{2,2:end} - DCN{2,1};
 CT = DCN_ctrlsub12{1,:};
@@ -663,16 +712,17 @@ ComboColors = flip([CP1;CP2]);
 
 subplot(1,2,1)
 b = barh([mtabC',MeanCnomtab',DecoyBar'], "stacked");
-b(9).FaceColor = [0.2 0.2 0.2];
-b(10).FaceColor = "w";
+b(8).FaceColor = [0.2 0.2 0.2];
+b(9).FaceColor = "w";
 ax = gca;
-order = ["Control","\it{P. xiph.    }", "\it{C. pyr.     }", "\it{Scina} spp. ", "\it{H. microps }"];
+order = ["Control","\it{P. xiph.}, n = 3   ", "\it{C. pyr.}, n = 1     ", "\it{Scina} spp., n = 2     ", "\it{H. microps,}  n = 2     "];
 ax.YTick = [];
 xlabel("DOC Relative to Control, \muM")
 set(ax, "Box", "off", "XColor", "none", "YColor","none")
 ax.XDir = "reverse";
 ax.XAxis.TickLabelColor = "k";
 ax.XAxis.Label.Color = "k";
+ax.XLim = [0 30];
 ax.XGrid = "on";
 percents = string(round(100.*MeanC./CT,1))+ "%";
 text(b(9).YEndPoints+2, b(9).XEndPoints-0.05, percents, 'HorizontalAlignment','center',...
@@ -683,8 +733,8 @@ end
 
 subplot(1,2,2)
 bn = barh([mtabN', MeanNnomtab',DecoyBarN'], "stacked");
-bn(9).FaceColor = [0.2 0.2 0.2];
-bn(10).FaceColor = "w";
+bn(8).FaceColor = [0.2 0.2 0.2];
+bn(9).FaceColor = "w";
 ax = gca;
 yticklabels(order(2:5))
 xlabel("TDN Relative to Control, \muM")
@@ -695,7 +745,7 @@ ax.XAxis.TickLabelColor = "k";
 ax.YAxis.TickLabelColor = "k";
 ax.XAxis.Label.Color = "k";
 ax.XGrid = "on";
-legend(["homoserine betaine","putrescine","arginine","serine",...
+legend(["homoserine betaine","putrescine","arginine",..."serine",...
     "alanine","taurine","glycine","4-aminobenzoic acid*",...
     "other metabolites","unaccounted"], "Location","southeast")
 percentsN = string(round(100.*MeanN./NT,1))+ "%";
@@ -710,32 +760,3 @@ end
 percentCArg = 100.*MeanCarg./CT;
 percentNArg = 100.*MeanNarg./NT;
 
-%% Correlations between mass and 12 h export
-in = (sI.Notes ~= "DEAD" & sI.Species ~="CTRL");
-[rho, p] = corr(mtabData_pmol(:,in)'./hours(sI.duration(in)),...
-    repmat(sI.dryWeight(in),1,82), "Rows", "complete");
-rho = rho(:,1); p = p(:,1);
-[psort, ip] = sort(p); rho = rho(ip);
-nicecorrsortnames = nicenames(ip);
-corrs = table(nicecorrsortnames, rho, psort);
-nvalid = sum(~isnan(mtabData_pmol(ip,in))&((mtabData_pmol(ip,in)>0)==1),2);
-corrs.nvalid = nvalid;
-corrs.percValid = 100.*nvalid./11;
-corrs(corrs.psort>0.1|corrs.percValid<50,:) = [];
-
-for ii = 1:height(corrs)
-    if nicenames(ii)=="2'deoxyguanosine"||nicenames(ii)=="N-acetyl-muramic acid"
-        continue
-    end
-    figure
-    ind = nicenames==nicenames(ii);
-    cdata = splitcolors(CP1,sI.Accurate_Species(in));
-    sc = scatter(sI.dryWeight(in),mtabData_pmol(ind,in)'./hours(sI.duration(in)),...
-        60, cdata, "filled");
-    text(sI.dryWeight(in),mtabData_pmol(ind,in)'./hours(sI.duration(in)),sI.Accurate_Species(in))
-    ylabel("pmol h^{-1}"); xlabel("Dry Mass, mg");
-    T = [nicenames(ii);" \rho = " + string(corrs.rho(ii));" p = " + string(corrs.psort(ii))];
-    title(T)
-    %legend(unique(sI.Accurate_Species(in)))
-    clear sc
-end

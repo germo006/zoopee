@@ -1,6 +1,9 @@
 %% Noah Germolus 12 Feb 2024
 % This is a code that does what Amy's allometric respiration code for
 % MOCNESS data does, but worse. 
+function FieldRates(pxtabs6, pxnames)
+
+load("AlbumMaps.mat", "soft")
 
 night = readtable("../datasets/M9_test_Classified_FOR_MATLAB.csv");
 day = readtable("../datasets/M8_test_Classified_FOR_MATLAB.csv");
@@ -74,8 +77,8 @@ cpeeday_std = splitapply(@sum,Copepee_std_day_fracs,addgrps_day);
 cpeenight = splitapply(@sum,Copepee_avg_night_fracs,addgrps_night);
 cpeenight_std = splitapply(@sum,Copepee_std_night_fracs,addgrps_night);
 
-cpeeavg = 12.*[cpeeday;cpeenight]./nets.Tow_Vol;
-cpeestd = 12.*[cpeeday_std;cpeenight_std]./nets.Tow_Vol;
+cpeeavg = 12.*[cpeeday;cpeenight]./nets.Tow_Vol;%./1000;
+cpeestd = 12.*[cpeeday_std;cpeenight_std]./nets.Tow_Vol;%./1000;
 
 id = sum(cpeeavg,1) ==0;
 colNames = pxnames(~id);
@@ -83,47 +86,136 @@ cpeeavg(:,id) = [];
 cpeestd(:,id) = [];
 
 %%
-% [a ia] = sort(median(cpeeavg), "descend");
-%%
 %mtab = 7; 
-mtab = find(colNames == "putrescine");
-f = figure("Position",[100 100 2000 1000]);
-ax1 = axes(f, "Position",[0.1300,0.1100,0.3695,0.8150]);
-ax2 = axes(f,"Position", [0.5005, 0.1100, 0.3695, 0.8150]);
-b1 = barh(ax1,...
-    mean([nets.Min_depth(nets.D_N=="d"),nets.Max_depth(nets.D_N=="d")],2),...
-    cpeeavg(nets.D_N=="d",mtab));
-b2 = barh(ax2,...
-    mean([nets.Min_depth(nets.D_N=="n"),nets.Max_depth(nets.D_N=="n")],2),...
-    cpeeavg(nets.D_N=="n",mtab));
-ax1.YDir = "reverse"; ax2.YDir = "reverse";
-ax1.XDir = "reverse"; ax2.YAxisLocation = "right";
-ax1.Box = "off"; ax2.Box = "off";
-ax1.TickLength = [0 0];
-ax2.TickLength = [0 0];
-ax1.Color = CP1{2};
-ax2.Color = CP1{3};
-b1.FaceColor = CP1{4};
-b2.FaceColor = CP1{1};
-b1.EdgeColor = [1.00,0.93,0.81];
-b2.EdgeColor = [0.58,0.72,0.81];
-b1.LineWidth = 2;b2.LineWidth = 2;
-% ax1.YAxis.Color = "none";
-% ax2.YAxis.Color = "none";
-ax1.YLim = ax2.YLim;
-xl = max([ax1.XLim;ax2.XLim]);
-ax1.XLim = xl; ax2.XLim = xl;
-ax1.YLabel.String = "Avg Net Depth, m";
-ax2.XLabel.String = "12-hour concentration increase, pM";
-ax1.XTick(1) = [];
-title(ax1, colNames(mtab))
-ax1.FontSize = 14; ax2.FontSize = 14;
-defont = "Corbel"; 
-ax1.FontName = defont; ax2.FontName = defont;
-ax1.Title.FontSize = 24;
-t1 = text(ax1, 7*ax1.XLim(2)/8, 0,  "day");
-t1.FontName = defont; t1.Color = b1.FaceColor; t1.FontSize = 24;
-t1.HorizontalAlignment = "left";t1.FontWeight = "bold";
-t2 = text(ax2, 7*ax2.XLim(2)/8, 0,  "night");
-t2.FontName = defont; t2.Color = b1.EdgeColor; t2.FontSize = 24;
-t2.HorizontalAlignment = "right"; t2.FontWeight = "bold";
+if(~exist("../figs/DNplots","dir"))
+    mkdir("../figs/DNplots");
+end
+for ii = 1:34
+    mtab = find(colNames == pxnames(end-ii+1));
+    
+    %% If you really wanna get nuts with it
+    if 1
+        nameadd = "plusAE2123";
+        load("H:/2022_0214_AE2123_BC/Chemstation-S/datasets/AE2123_NPG_curve34.2024.01.07_OneMode_Filtered.mat")
+        inight = (sInfo.timehhMM>=2000 | sInfo.timehhMM<800);
+        iday = (sInfo.timehhMM>=800 & sInfo.timehhMM<2000);
+        im = ismember(nicenames,pxnames(end-ii+1));
+        nicenames(im)
+        zd = sInfo.CTDdepth(iday);
+        zn = sInfo.CTDdepth(inight);
+        md = mtabData(im, iday);
+        mn = mtabData(im, inight);
+        f = figure("Position",[100 100 1000 1000], "Color",[1, 0.89 0.92]);
+        ax1 = axes(f, "Position",[0.1300,0.1100,0.3700,0.8150]);
+        
+        b1 = barh(ax1,...
+            mean([nets.Min_depth(nets.D_N=="d"),nets.Max_depth(nets.D_N=="d")],2),...
+            cpeeavg(nets.D_N=="d",mtab));
+        b1.FaceColor = soft{3};
+        b1.EdgeColor = "k";
+        b1.FaceAlpha = 0.7;b1.EdgeAlpha = 0.7;
+        b1.BarWidth = 0.5.*b1.BarWidth;
+        hold on
+        scd = scatter(ax1,md, zd,100, 'filled', 'o', "MarkerEdgeColor","k","MarkerFaceColor",b1.FaceColor, "LineWidth",2);
+        ax2 = axes(f,"Position", [0.5000, 0.1100, 0.3700, 0.8150], "Color","k");
+        b2 = barh(ax2,...
+            mean([nets.Min_depth(nets.D_N=="n"),nets.Max_depth(nets.D_N=="n")],2),...
+            cpeeavg(nets.D_N=="n",mtab));
+        b2.FaceColor = soft{1};
+        b2.EdgeColor = "w";
+        b2.FaceAlpha = 0.7;b2.EdgeAlpha=0.7;
+        b2.BarWidth = 0.5.*b2.BarWidth;
+        hold on
+        scn = scatter(ax2,mn, zn,100, 'filled', 'pentagram', "MarkerEdgeColor","w","MarkerFaceColor","k");
+        hold on
+        
+        ax1.YDir = "reverse"; ax2.YDir = "reverse";
+        ax1.XDir = "reverse"; ax2.YAxisLocation = "right";
+        ax1.Box = "off"; ax2.Box = "off";
+        ax1.TickLength = [0 0];
+        ax2.TickLength = [0 0];
+        
+        
+        
+        b1.LineWidth = 2;b2.LineWidth = 2;
+        bl1 = b1.BaseLine; bl2 = b2.BaseLine;
+        bl1.Visible = "off";
+        ax1.YLim = ax2.YLim;
+        xl = max([ax1.XLim;ax2.XLim]);
+        ax1.XLim = xl; ax2.XLim = xl;
+        ax1.YLabel.String = "depth, m";
+        ax2.XLabel.String = {"[bar]:";"12 h concentration increase, pM"};
+        ax1.XLabel.String = {"[scatter]:";"AE2123 ambient concentration, pM"};
+        ax2.YAxis.Color = "none";
+        ax1.YAxis.Color = "k";
+        ax1.XAxis.Color = "k";
+        ax2.XAxis.Color = "k";
+        
+        title(ax1, colNames(mtab))
+        ax1.FontSize = 14; ax2.FontSize = 14;
+        defont = "Corbel";
+        ax1.FontName = defont; ax2.FontName = defont;
+        ax1.Title.FontSize = 24;
+        ax1.Title.Color = "k";
+        t1 = text(ax1, 7*ax1.XLim(2)/8, 0,  "day");
+        t1.FontName = defont; t1.Color = b1.FaceColor; t1.FontSize = 24;
+        t1.HorizontalAlignment = "left";t1.FontWeight = "bold";
+        t2 = text(ax2, 7*ax2.XLim(2)/8, 0,  "night");
+        hold on
+        t2.FontName = defont; t2.Color = b2.FaceColor; t2.FontSize = 24;
+        t2.HorizontalAlignment = "right"; t2.FontWeight = "bold";
+        ax1.XTick = ax2.XTick;
+        ax1.XTick(1) = [];
+        ax1.XTickLabelRotation = 0;
+        ax1.Color = "w";
+        ax2.Color = "k";
+    else
+        nameadd = "";
+        f = figure("Position",[100 100 1000 1000], "Color","none");
+        ax1 = axes(f, "Position",[0.1300,0.1100,0.3700,0.8150]);
+        ax2 = axes(f,"Position", [0.5000, 0.1100, 0.3700, 0.8150]);
+        b1 = barh(ax1,...
+            mean([nets.Min_depth(nets.D_N=="d"),nets.Max_depth(nets.D_N=="d")],2),...
+            cpeeavg(nets.D_N=="d",mtab)./1000);
+        b2 = barh(ax2,...
+            mean([nets.Min_depth(nets.D_N=="n"),nets.Max_depth(nets.D_N=="n")],2),...
+            cpeeavg(nets.D_N=="n",mtab)./1000);
+        ax1.YDir = "reverse"; ax2.YDir = "reverse";
+        ax1.XDir = "reverse"; ax2.YAxisLocation = "right";
+        ax1.Box = "off"; ax2.Box = "off";
+        ax1.TickLength = [0 0];
+        ax2.TickLength = [0 0];
+        ax1.Color = "none";
+        ax2.Color = "none";
+        b1.FaceColor = soft{3};
+        b1.EdgeColor = soft{1};
+        b2.FaceColor = soft{1};
+        b2.EdgeColor = soft{3};
+        b1.LineWidth = 2;b2.LineWidth = 2;
+        bl1 = b1.BaseLine; bl2 = b2.BaseLine;
+        bl1.Visible = "off";
+        ax1.YLim = ax2.YLim;
+        xl = max([ax1.XLim;ax2.XLim]);
+        ax1.XLim = xl; ax2.XLim = xl;
+        ax1.YLabel.String = "Avg Net Depth, m";
+        ax2.XLabel.String = "12-hour concentration increase, nM";
+        ax2.YAxis.Color = "none";
+        title(ax1, colNames(mtab))
+        ax1.FontSize = 14; ax2.FontSize = 14;
+        defont = "Corbel";
+        ax1.FontName = defont; ax2.FontName = defont;
+        ax1.Title.FontSize = 24;
+        t1 = text(ax1, 7*ax1.XLim(2)/8, 0,  "day");
+        t1.FontName = defont; t1.Color = b1.FaceColor; t1.FontSize = 24;
+        t1.HorizontalAlignment = "left";t1.FontWeight = "bold";
+        t2 = text(ax2, 7*ax2.XLim(2)/8, 0,  "night");
+        t2.FontName = defont; t2.Color = b2.FaceColor; t2.FontSize = 24;
+        t2.HorizontalAlignment = "right"; t2.FontWeight = "bold";
+        ax1.XTick = ax2.XTick;
+        ax1.XTick(1) = [];
+        ax1.XTickLabelRotation = 0;
+    end
+    saveas(f, ["../figs/DNplots/"+pxnames(end-ii+1)+nameadd+"_DayNight.png"], "png")
+end
+
+end

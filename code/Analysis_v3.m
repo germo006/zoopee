@@ -15,6 +15,7 @@ end
 
 % Information for constructing a color gradient later on. 
 colors = [CP1{2};CP1{1};CP1{3}];
+col2 = [CP1{4}; CP1{3}];
 npts = 1000;
 
 %% Calculations.
@@ -208,7 +209,7 @@ HeatMapMtabs(ihrm,:)=[];
 h = heatmap(hydata, hxdata, HeatMapMtabs);
 % h.ColorLimits = [1,10];
 h.ColorScaling = "scaledcolumns";
-h.Colormap = flip(cmapper(colors,npts));
+h.Colormap = flip(cmapper(col2,npts));
 h.FontSize = 12;
 h.ColorbarVisible = "off";
 axp = struct(gca);       %you will get a warning
@@ -273,7 +274,7 @@ f = figure;
 h = heatmap(hydata, hxdata, HeatMapMtabs);
 % h.ColorLimits = [1,10];
 h.ColorScaling = "scaledcolumns";
-h.Colormap = flip(cmapper(colors,npts));
+h.Colormap = flip(cmapper(col2,npts));
 h.FontSize = 12;
 h.ColorbarVisible = "off";
 axp = struct(gca);       %you will get a warning
@@ -408,35 +409,49 @@ meanmass = mean(rI.dryWeight(rI.Species == "PX"));
 kthresh = kfun(meanmass);
 % below = sum(pxtabs>2.1667,1)==0;
 med = median([pxtabs6;pxtabs12],1,"omitnan");
-[~,ia] = sort(med);
+[~,ia] = sort(med, "ascend", "MissingPlacement","last");
 % pxtabs6 = pxtabs6(:,ia(~below));
 % pxtabs12 = pxtabs12(:,ia(~below));
+
 pxnames = nicenames(~mremove); 
 pxnames = pxnames(ia); %pxnames(ia(~below));
-
+pxtabs6 = pxtabs6(:,ia);pxtabs12=pxtabs12(:,ia);
+noplot = mean([pxtabs6;pxtabs12],1)==0;
+pxnames = pxnames(~noplot);
+pxtabs6 = pxtabs6(:,~noplot); pxtabs12 = pxtabs12(:,~noplot);
 xPx6 = repmat(1:size(pxnames,1),1,sum(rI.Species=="PX"&rI.Nominal_Duration_h==6))'; %1:sum(~below)
 xPx12 = repmat(1:size(pxnames,1),1,sum(rI.Species=="PX"&rI.Nominal_Duration_h==12))'; %1:sum(~below)
-bmmPx6 = reshape(pxtabs6(:,ia),length(xPx6),1);
-bmmPx12 = reshape(pxtabs12(:,ia),length(xPx12),1);
+bmmPx6 = [pxtabs6(1,:),pxtabs6(2,:),pxtabs6(3,:)]';
+bmmPx12 = [pxtabs12(1,:),pxtabs12(2,:),pxtabs12(3,:)]';
 sc1 = scatter(xPx6,bmmPx6, 65, CP1{5},"v","LineWidth",2);
 hold on
 sc2 = scatter(xPx12,bmmPx12, 65, CP1{5},'filled',"^");
 ax = gca;
+% ax.Color = "none";
+% ax.XAxis.Color = soft{1};
+% ax.YAxis.Color = soft{1};
+% sc1.MarkerEdgeColor = soft{2};
+% sc2.MarkerEdgeColor = soft{2};
+% sc2.MarkerFaceColor = soft{3};
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
 set(ax,"XLim",[0 1+length(pxnames)], "YScale","log");
 set(ax,"XTick",1:length(pxnames), "XTickLabels", pxnames,"XTickLabelRotation",45)
 h = hline(kthresh, ax.XLim);
+%h.Color = soft{2};
 %%% FORMAT THESE
-xl6 = log10(bmmPx6); xl6(isinf(xl6))=NaN;
-xl12 = log10(bmmPx12); xl12(isinf(xl12))=NaN;
-lm6 = fitlm(xPx6,xl6); lm12 = fitlm(xPx12,xl12);
-fl6 = plot(xPx6,10.^(predict(lm6,xPx6)), "HandleVisibility","on", "LineStyle","-","Color",[0.5 0.5 0.5], "LineWidth",2.5);
-fl12 = plot(xPx12,10.^(predict(lm12,xPx12)), "HandleVisibility","on", "LineStyle",'-',"Color",[0.2 0.2 0.2], "LineWidth",2.5);
+% xl6 = log10(bmmPx6); xl6(isinf(xl6))=NaN;
+% xl12 = log10(bmmPx12); xl12(isinf(xl12))=NaN;
+% lm6 = fitlm(xPx6,xl6); lm12 = fitlm(xPx12,xl12);
+% fl6 = plot(xPx6,10.^(predict(lm6,xPx6)), "HandleVisibility","on", "LineStyle","-","Color",[0.5 0.5 0.5], "LineWidth",2.5);
+% fl12 = plot(xPx12,10.^(predict(lm12,xPx12)), "HandleVisibility","on", "LineStyle",'-',"Color",[0.2 0.2 0.2], "LineWidth",2.5);
 %%%
 xL = 1.5:1:(1.5+size(pxnames,1)-2);
 xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",.5.*CP1{5},"HandleVisibility","off")
-title("Pleuromamma xiphias", "FontAngle","italic")
-legend(["t = 6 h", "t = 12 h", "6 h trendline", "12 h trendline"], "Location","northwest")
+title("Pleuromamma xiphias", "FontAngle","italic"); %, "Color",soft{1})
+legend(["t = 6 h", "t = 12 h"], "Location","northwest", "Box","off"); %,"TextColor", soft{1}) %, "6 h trendline", "12 h trendline"
+% For the Field Data chapter.
+%save("../../../2022_0214_AE2123_BC/Chemstation-S/datasets/zoopRates.mat", "pxtabs6","pxnames")
+
 
 subplot(2,2,2)
 % C. py plot.
@@ -534,9 +549,38 @@ xline(xL, "LineStyle","--", "LineWidth",0.5, "Color",[.5,.5,.5],"HandleVisibilit
 clear tempI idead
 title("\it{Scina} spp.")
 
+%% This section will create biomass-scaled estimates of metabolite excretion.
+% It's based only on the 6 hour Pleuromamma xiphias samples and applies
+% only to copepods. As it stands, it will also only do the top 8
+% metabolites.
+
+% med = median([pxtabs6],1,"omitnan");
+% [~,ia] = sort(med, "descend", "MissingPlacement","last");
+%FieldRates(pxtabs6(:,end-7:end), pxnames(end-7:end))
+
+FieldRates(pxtabs6, pxnames)
+
+
 %% Scatterplot; all at once.
+mnames = nicenames(~mremove);
+pxm = median(mtabData_pmol_mgdry_hr(~mremove,sI.Species == "PX")');
+amm = median(mtabData_pmol_mgdry_hr(~mremove,sI.Species == "Amphipod (long skinny)")');
+cpm = mtabData_pmol_mgdry_hr(~mremove,sI.Species == "C. pyrimidata")';
+eum = median(mtabData_pmol_mgdry_hr(~mremove,sI.Species == "Euph")');
+[~, ip] = sort(pxm, "descend", "MissingPlacement","last");
+[~, ia] = sort(amm, "descend", "MissingPlacement","last");
+[~, ic] = sort(cpm, "descend", "MissingPlacement","last");
+[~, ie] = sort(eum, "descend", "MissingPlacement","last");
+pnames = mnames(ip); anames = mnames(ia);
+cnames = mnames(ic); enames = mnames(ie);
+top10names = union(pnames(1:8),union(anames(1:8),union(cnames(1:8),enames(1:8))));
+[~, ord] = ismember(top10names, mnames);
+
+%%
+
 
 scattertabs = mtabData_pmol_mgdry_hr(~mremove,t12i|t6i)';
+scattertabs = scattertabs(:,ord);
 rI = sI(t12i|t6i,:);
 ictrl = rI.Species=="CTRL";
 rI = rI(~ictrl,:);
@@ -545,12 +589,15 @@ scattertabs(scattertabs<= 0)= NaN;
 med = median(scattertabs,1,"omitnan");
 [~,ia] = sort(med, "descend");
 names = nicenames(~mremove);
+names = names(ord);
 names = names(ia);
 scatter_sort = scattertabs(:,ia);
 names(sum(isnan(scatter_sort),1)>9,: ) = [];
 scatter_sort(:,sum(isnan(scatter_sort),1)>9) = [];
-names = names(1:15);
-scatter_sort = scatter_sort(:,1:15);
+scatter_sort = flip(scatter_sort,2);
+names = flip(names);
+% names = names(1:15);
+% scatter_sort = scatter_sort(:,1:15);
 
 
 
@@ -561,8 +608,8 @@ meanmass = mean(rI.dryWeight(rI.Species == "PX"));
 kthresh1 = kfun(meanmass);
 xPx6 = repmat(1:size(names,1),1,sum(rI.Species=="PX"&rI.Nominal_Duration_h==6))'; %1:sum(~below)
 xPx12 = repmat(1:size(names,1),1,sum(rI.Species=="PX"&rI.Nominal_Duration_h==12))'; %1:sum(~below)
-bmmPx6 = reshape(pxtabs6,length(xPx6),1);
-bmmPx12 = reshape(pxtabs12,length(xPx12),1);
+bmmPx6 = [pxtabs6(1,:),pxtabs6(2,:),pxtabs6(3,:)]';
+bmmPx12 = [pxtabs12(1,:),pxtabs12(2,:),pxtabs12(3,:)]';
 sc1 = scatter(xPx6,bmmPx6, 65, CP1{5},"v", "LineWidth",2.5);
 hold on
 sc2 = scatter(xPx12,bmmPx12, 65, CP1{5},'filled',"^", "LineWidth",2.5);
@@ -580,7 +627,7 @@ tempI = rI(rI.Species=="C. pyrimidata",:);
 xCp = repelem(1:size(names,1),1,length(rI.Species(rI.Species=="C. pyrimidata")))';
 bmmCp = reshape(cptabs,length(xCp),1);
 %sc3 = scatter(xCp(~idead),bmmCp(~idead), 65, CP1{3},'filled',"square");
-sc4 = scatter(xCp,bmmCp, 65, CP1{3},"filled","square", "LineWidth",2.5);
+sc4 = scatter(xCp,bmmCp, 75, CP1{3},"filled","square", "LineWidth",2.5);
 clear tempI %idead
 
 
@@ -593,7 +640,7 @@ tempI = rI(rI.Species=="Euph",:);
 % idead = repmat(idead',1,size(eutabs,2))';
 xEu = repelem(1:size(names,1),1,length(rI.Species(rI.Species=="Euph")))';
 bmmEu = reshape(eutabs,length(xEu),1);
-sc5 = scatter(xEu,bmmEu, 65, CP1{1},'filled',"hexagram", "LineWidth",2.5);
+sc5 = scatter(xEu,bmmEu, 75, CP1{1},'filled',"hexagram", "LineWidth",2.5);
 % sc6 = scatter(xEu(idead),bmmEu(idead), 65, CP1{1},"hexagram");
 clear tempI idead
 
@@ -603,8 +650,10 @@ meanmass = mean(rI.dryWeight(rI.Species == "Amphipod (long skinny)"));
 kthresh4 = kfun(meanmass);
 xAm = repelem(1:size(names,1),1,length(rI.Species(rI.Species=="Amphipod (long skinny)")))';
 bmmAm = reshape(amtabs,length(xAm),1);
-sc7 = scatter(xAm,bmmAm, 65, "k",'filled',"diamond", "LineWidth",2.5);
+sc7 = scatter(xAm,bmmAm, 75, "k",'filled',"diamond", "LineWidth",2.5);
 ax = gca;
+set(ax,"XLim",[0 1+length(names)])
+ax.YGrid = "on";
 h1 = hline(kthresh1, ax.XLim);
 h1.Color = CP1{5}; h1.LineWidth = 2;
 h2 = hline(kthresh2, ax.XLim);
@@ -615,9 +664,9 @@ h3.Color = CP1{1}; h3.LineWidth = 2;
 h4 = hline(kthresh4, ax.XLim);
 h4.Color = "k"; h4.LineWidth = 2;
 ax.YLabel.String = "pmol h^{-1} mg^{-1}";
-set(ax,"XLim",[0 1+length(names)], "YScale","log");
+set(ax, "YScale","log");
 set(ax,"XTick",1:length(names), "XTickLabels", names,"XTickLabelRotation",45)
-title("All Species' Excretion Rates", "FontWeight","bold")
+title("All Species' Top 8 Excretion Rates", "FontWeight","bold")
 legend(["\it{P. xiphias}_{6h}", "\it{P. xiphias}_{12h}",...
     "\it{C. pyrimidata}",..."\it{C. pyrimidata} (dead)",...
     "\it{Hansarsia microps}",..."{\itStylocheiron abbreviatum} (dead)",...
@@ -634,8 +683,9 @@ end
 load("DOC_DON.mat")
 
 % First: let's actually break the metabolites into elements. 
-totC = mtabData_pM_Reorder(~mremove,:).*mtabElem.C(~mremove,:);
-totN = mtabData_pM_Reorder(~mremove,:).*mtabElem.N(~mremove,:);
+totC = mtabData_pM_Reorder_subctrl(~mremove,:).*mtabElem.C(~mremove,:);
+totN = mtabData_pM_Reorder_subctrl(~mremove,:).*mtabElem.N(~mremove,:);
+totO = mtabData_pM_Reorder_subctrl(~mremove,:).*mtabElem.O(~mremove,:);
 
 elmC = totC(:,sI.Nominal_Duration_h==12);
 elmN = totN(:,sI.Nominal_Duration_h==12);
@@ -710,34 +760,35 @@ MeanNnomtab = MeanN - sum(mtabN,1);
 load("AlbumMaps.mat","CP2")
 ComboColors = flip([CP1;CP2]);
 
+%% Updated figure to use just moles and not molar numbers
 subplot(1,2,1)
-b = barh([mtabC',MeanCnomtab',DecoyBar'], "stacked");
+b = barh(0.06.*[mtabC',MeanCnomtab',DecoyBar'], "stacked");
 b(8).FaceColor = [0.2 0.2 0.2];
 b(9).FaceColor = "w";
 ax = gca;
 order = ["Control","\it{P. xiph.}, n = 3   ", "\it{C. pyr.}, n = 1     ", "\it{Scina} spp., n = 2     ", "\it{H. microps,}  n = 2     "];
 ax.YTick = [];
-xlabel("DOC Relative to Control, \muM")
+xlabel("DOC Relative to Control, \mumol")
 set(ax, "Box", "off", "XColor", "none", "YColor","none")
 ax.XDir = "reverse";
 ax.XAxis.TickLabelColor = "k";
 ax.XAxis.Label.Color = "k";
-ax.XLim = [0 30];
+ax.XLim = [0 30*0.06];
 ax.XGrid = "on";
 percents = string(round(100.*MeanC./CT,1))+ "%";
-text(b(9).YEndPoints+2, b(9).XEndPoints-0.05, percents, 'HorizontalAlignment','center',...
+text(b(8).YEndPoints+0.2, b(8).XEndPoints-0.05, percents, 'HorizontalAlignment','center',...
     'VerticalAlignment','bottom')
 for ii = 1:length(b)-2
     b(ii).FaceColor = ComboColors{ii};
 end
 
 subplot(1,2,2)
-bn = barh([mtabN', MeanNnomtab',DecoyBarN'], "stacked");
+bn = barh(0.06.*[mtabN', MeanNnomtab',DecoyBarN'], "stacked");
 bn(8).FaceColor = [0.2 0.2 0.2];
 bn(9).FaceColor = "w";
 ax = gca;
 yticklabels(order(2:5))
-xlabel("TDN Relative to Control, \muM")
+xlabel("TDN Relative to Control, \mumol")
 set(ax, "Box", "off","XColor", "none", "YColor","none")
 ax.TickLength = [0,0];
 ax.TickLabelInterpreter = "tex";
@@ -749,7 +800,7 @@ legend(["homoserine betaine","putrescine","arginine",..."serine",...
     "alanine","taurine","glycine","4-aminobenzoic acid*",...
     "other metabolites","unaccounted"], "Location","southeast")
 percentsN = string(round(100.*MeanN./NT,1))+ "%";
-text(bn(9).YEndPoints+2, bn(9).XEndPoints-0.05, percentsN, 'HorizontalAlignment','center',...
+text(bn(8).YEndPoints+0.2, bn(8).XEndPoints-0.05, percentsN, 'HorizontalAlignment','center',...
     'VerticalAlignment','bottom')
 for ii = 1:length(bn)-2
     bn(ii).FaceColor = ComboColors{ii};
